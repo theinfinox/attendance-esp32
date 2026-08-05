@@ -5,6 +5,7 @@
 // ============================================================================
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include "IAttendanceRepository.h"
 
 class CliManager {
@@ -21,6 +22,8 @@ private:
     void dumpUsers();
     void dumpLogs();
     void clearLogs();
+    void printStatus();
+    void addUser(const String& jsonPayload);
 
     // Callback used for streaming logs without high RAM overhead
     static void printLogLine(const char* jsonLine, void* context);

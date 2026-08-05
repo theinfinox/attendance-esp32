@@ -1,1 +1,0 @@
-@keyframes rise-in { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }.page-content > * { animation:rise-in .22s ease both; }.toast { animation:rise-in .2s ease both; }.status-dot.connected { animation:pulse 2.5s infinite; } @keyframes pulse { 50% { box-shadow:0 0 0 7px color-mix(in srgb,var(--success) 0%,transparent); } }

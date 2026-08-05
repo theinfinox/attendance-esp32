@@ -1,0 +1,10 @@
+{
+  "name": "Serial Attendance Manager",
+  "short_name": "Attendly",
+  "description": "Manage attendance hardware through USB Serial.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#2563eb",
+  "icons": [{ "src": "./assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

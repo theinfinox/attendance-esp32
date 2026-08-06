@@ -76,6 +76,16 @@ bool CliManager::processCommand(const String& cmd) {
         addUser(jsonPayload);
         Serial.println("{\"type\":\"done\"}");
         return true;
+    } else if (cmdName == "DELETE_USER") {
+        if (spaceIdx == -1) {
+            Serial.println("{\"type\":\"error\",\"message\":\"Missing UID\"}");
+            Serial.println("{\"type\":\"done\"}");
+            return true;
+        }
+        String uid = cmd.substring(spaceIdx + 1);
+        deleteUser(uid);
+        Serial.println("{\"type\":\"done\"}");
+        return true;
     }
     return false;
 }
@@ -231,6 +241,42 @@ void CliManager::addUser(const String& jsonPayload) {
         data["uid"] = uid;
         data["name"] = name;
         data["role"] = role;
+        String out;
+        serializeJson(successDoc, out);
+        Serial.println(out);
+    } else {
+        Serial.println("{\"type\":\"error\",\"message\":\"Storage failed\"}");
+    }
+}
+
+void CliManager::deleteUser(const String& uid) {
+    if (!_repo) {
+        Serial.println("{\"type\":\"error\",\"message\":\"No repository\"}");
+        return;
+    }
+
+    String cleanUid = uid;
+    cleanUid.trim();
+    cleanUid.toUpperCase();
+    
+    if (cleanUid.length() < 4 || cleanUid.length() > 32) {
+        Serial.println("{\"type\":\"error\",\"message\":\"Invalid UID length\"}");
+        return;
+    }
+
+    String existingUsers = _repo->getStudents();
+    JsonDocument usersDoc;
+    deserializeJson(usersDoc, existingUsers);
+    
+    if (!usersDoc.containsKey(cleanUid)) {
+        Serial.println("{\"type\":\"error\",\"message\":\"User not found\"}");
+        return;
+    }
+    
+    if (_repo->deleteStudent(cleanUid)) {
+        JsonDocument successDoc;
+        successDoc["type"] = "deleted";
+        successDoc["uid"] = cleanUid;
         String out;
         serializeJson(successDoc, out);
         Serial.println(out);

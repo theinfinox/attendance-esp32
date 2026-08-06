@@ -24,6 +24,7 @@ private:
     void clearLogs();
     void printStatus();
     void addUser(const String& jsonPayload);
+    void deleteUser(const String& uid);
 
     // Callback used for streaming logs without high RAM overhead
     static void printLogLine(const char* jsonLine, void* context);

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Chrome Web Serial Compatibility Audit</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; line-height: 1.5; color: #333; }
+    h1 { font-size: 1.5rem; }
+    button { padding: 10px 16px; margin: 5px 0; background: #0066cc; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    button:active { background: #004c99; }
+    pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; font-size: 0.85rem; }
+    .phase { margin-bottom: 30px; border-top: 2px solid #eee; padding-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1>Android USB Serial Audit Tool</h1>
+  <p>Run these phases sequentially on your CMF Phone 2 Pro to generate the empirical evidence required for the audit.</p>
+
+  <div class="phase">
+    <h2>Phase 1 - Environment Audit</h2>
+    <button id="btn-env">Run Environment Audit</button>
+    <pre id="out-env">Waiting...</pre>
+  </div>
+
+  <div class="phase">
+    <h2>Phase 2 - Web Serial API Audit</h2>
+    <p>This will invoke the Web Serial picker. Select the ESP32 (if it appears). If it says "No compatible device found", click cancel or close the picker to capture the rejection.</p>
+    <button id="btn-serial">Run Web Serial Audit</button>
+    <pre id="out-serial">Waiting...</pre>
+  </div>
+
+  <div class="phase">
+    <h2>Phase 3 & 7 - WebUSB Feasibility & Device Descriptors</h2>
+    <p>This will invoke the raw WebUSB picker. Select the ESP32. We will attempt to read its hardware descriptors and check if it can be claimed.</p>
+    <button id="btn-usb">Run WebUSB Audit</button>
+    <pre id="out-usb">Waiting...</pre>
+  </div>
+
+  <script>
+    function log(elementId, text) {
+      document.getElementById(elementId).textContent += text + "\n";
+    }
+    function clear(elementId) {
+      document.getElementById(elementId).textContent = "";
+    }
+
+    // Phase 1
+    document.getElementById('btn-env').addEventListener('click', () => {
+      clear('out-env');
+      log('out-env', `User Agent: ${navigator.userAgent}`);
+      log('out-env', `Secure Context: ${window.isSecureContext}`);
+      log('out-env', `navigator.serial exists: ${'serial' in navigator}`);
+      log('out-env', `navigator.usb exists: ${'usb' in navigator}`);
+    });
+
+    // Phase 2
+    document.getElementById('btn-serial').addEventListener('click', async () => {
+      clear('out-serial');
+      try {
+        log('out-serial', 'Calling navigator.serial.getPorts()...');
+        const existingPorts = await navigator.serial.getPorts();
+        log('out-serial', `Returned ${existingPorts.length} previously granted ports.`);
+
+        log('out-serial', 'Calling navigator.serial.requestPort()...');
+        const port = await navigator.serial.requestPort();
+        const info = port.getInfo();
+        log('out-serial', `Success! Port acquired.`);
+        log('out-serial', `USB Vendor ID: 0x${(info.usbVendorId || 0).toString(16)}`);
+        log('out-serial', `USB Product ID: 0x${(info.usbProductId || 0).toString(16)}`);
+      } catch (err) {
+        log('out-serial', `REJECTED: ${err.name} - ${err.message}`);
+        log('out-serial', `Stack: ${err.stack}`);
+      }
+    });
+
+    // Phase 3 & 7
+    document.getElementById('btn-usb').addEventListener('click', async () => {
+      clear('out-usb');
+      try {
+        log('out-usb', 'Calling navigator.usb.requestDevice({ filters: [] })...');
+        const device = await navigator.usb.requestDevice({ filters: [] });
+        
+        log('out-usb', `Success! Device acquired: ${device.productName || 'Unknown'} (Manufacturer: ${device.manufacturerName || 'Unknown'})`);
+        log('out-usb', `Vendor ID: 0x${device.vendorId.toString(16).padStart(4, '0')}`);
+        log('out-usb', `Product ID: 0x${device.productId.toString(16).padStart(4, '0')}`);
+        log('out-usb', `Device Class: 0x${device.deviceClass.toString(16)}`);
+        log('out-usb', `Device Subclass: 0x${device.deviceSubclass.toString(16)}`);
+        log('out-usb', `Device Protocol: 0x${device.deviceProtocol.toString(16)}`);
+        
+        log('out-usb', '\nEnumerating Configurations and Interfaces...');
+        device.configurations.forEach((config, cIdx) => {
+          log('out-usb', `  Configuration ${cIdx + 1} (Value: ${config.configurationValue})`);
+          config.interfaces.forEach((iface, iIdx) => {
+            log('out-usb', `    Interface ${iIdx} (Number: ${iface.interfaceNumber})`);
+            iface.alternates.forEach((alt, aIdx) => {
+              log('out-usb', `      Alternate ${aIdx}: Class 0x${alt.interfaceClass.toString(16)}, Subclass 0x${alt.interfaceSubclass.toString(16)}, Protocol 0x${alt.interfaceProtocol.toString(16)}`);
+              alt.endpoints.forEach((ep, eIdx) => {
+                log('out-usb', `        Endpoint ${eIdx}: Number ${ep.endpointNumber}, Direction ${ep.direction}, Type ${ep.type}, PacketSize ${ep.packetSize}`);
+              });
+            });
+          });
+        });
+
+        log('out-usb', '\nAttempting to open device and claim interface 0...');
+        try {
+          await device.open();
+          log('out-usb', '  device.open() successful.');
+          
+          if (device.configuration === null) {
+            log('out-usb', '  Selecting configuration 1...');
+            await device.selectConfiguration(1);
+          }
+          
+          await device.claimInterface(0);
+          log('out-usb', '  device.claimInterface(0) successful! WebUSB fallback is technically feasible.');
+        } catch (err) {
+          log('out-usb', `  CLAIM FAILED: ${err.name} - ${err.message}`);
+          log('out-usb', `  This typically proves a kernel driver (e.g. ch341.ko) has claimed the device exclusively.`);
+        } finally {
+          if (device.opened) await device.close();
+        }
+      } catch (err) {
+        log('out-usb', `REJECTED: ${err.name} - ${err.message}`);
+        log('out-usb', `Stack: ${err.stack}`);
+      }
+    });
+  </script>
+</body>
+</html>

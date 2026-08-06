@@ -1,0 +1,20 @@
+import { escapeHtml, formatDate } from "../js/utils.js";
+
+let view = { query:"", filter:"all", page:1, size:12 };
+const record = log => {
+  const status = String(log.status ?? "").toUpperCase();
+  return {
+    time:log.timestamp ?? log.time ?? log.date ?? "",
+    name:log.name ?? log.user_name ?? log.user ?? "Unknown",
+    card:log.card ?? log.rfid ?? log.rfid_uid ?? log.card_id ?? log.uid ?? "—",
+    event:log.event ?? log.action ?? ({ IN:"Check-in", OUT:"Check-out" }[status] ?? log.status ?? log.type ?? "Attendance")
+  };
+};
+/** Render the log collection with search and event filtering. */
+export function renderLogs(app) {
+  const items = app.logs.map(record).filter(log => (view.filter === "all" || log.event.toLowerCase() === view.filter) && Object.values(log).join(" ").toLowerCase().includes(view.query.toLowerCase()));
+  const pages = Math.max(1, Math.ceil(items.length / view.size)); view.page = Math.min(view.page, pages); const shown = items.slice((view.page - 1) * view.size, view.page * view.size);
+  const rows = shown.length ? shown.map(log => `<tr><td>${escapeHtml(formatDate(log.time))}</td><td><strong>${escapeHtml(log.name)}</strong></td><td>${escapeHtml(log.card)}</td><td><span class="pill">${escapeHtml(log.event)}</span></td></tr>`).join("") : `<tr><td colspan="4"><div class="empty-state"><strong>No logs to display</strong><span>Connect a device and press Refresh to load attendance logs.</span></div></td></tr>`;
+  return `<div class="toolbar"><div class="toolbar-left"><input id="log-search" class="input search-input" value="${escapeHtml(view.query)}" placeholder="Search logs"><select id="log-filter" class="select"><option value="all">All events</option><option value="check-in">Check-in</option><option value="check-out">Check-out</option></select></div><div class="toolbar-right"><button class="button" id="export-logs-json">Export JSON</button><button class="button" id="export-logs-csv">Export CSV</button><button class="button danger" id="clear-logs">Clear logs</button><button class="button primary" id="refresh-logs">Refresh</button></div></div><section class="card table-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Time</th><th>User</th><th>RFID card</th><th>Event</th></tr></thead><tbody>${rows}</tbody></table></div><div class="pagination"><span>${items.length} record${items.length === 1 ? "" : "s"}</span><div class="pagination-controls"><button class="button" data-logs-page="prev" ${view.page === 1 ? "disabled" : ""}>Previous</button><span class="page-indicator">${view.page} / ${pages}</span><button class="button" data-logs-page="next" ${view.page === pages ? "disabled" : ""}>Next</button></div></div></section>`;
+}
+export function bindLogs(root, handlers) { root.querySelector("#log-filter").value = view.filter; root.querySelector("#log-search")?.addEventListener("input", event => { view.query = event.target.value; view.page = 1; handlers.render(); }); root.querySelector("#log-filter")?.addEventListener("change", event => { view.filter = event.target.value; view.page = 1; handlers.render(); }); root.querySelectorAll("[data-logs-page]").forEach(button => button.addEventListener("click", () => { view.page += button.dataset.logsPage === "next" ? 1 : -1; handlers.render(); })); root.querySelector("#refresh-logs")?.addEventListener("click", handlers.refresh); root.querySelector("#clear-logs")?.addEventListener("click", handlers.clear); root.querySelector("#export-logs-json")?.addEventListener("click", handlers.exportJson); root.querySelector("#export-logs-csv")?.addEventListener("click", handlers.exportCsv); }

@@ -1,31 +1,41 @@
 # 🤖 Attendly Terminal Firmware — AI Agent Autonomous Setup & Flashing Protocol
 
 > **Purpose:** This file is an executable protocol for an AI Agent (e.g. Antigravity, Claude Code, Cursor, Cline, Copilot) operating inside VS Code or a terminal.  
-> When the user connects an embedded board to USB and pastes this instruction prompt along with their target board name, the AI Agent must autonomously detect the hardware, verify prerequisites, resolve dependencies, compile the firmware, flash the board, and validate operation.
+> When a user—whether a seasoned engineer or a complete beginner/non-tech maker—connects an embedded board to USB and asks you to set up or flash this project, **you must guide the entire journey autonomously, empathetically, and flawlessly**.
 
 ---
 
-## 🎯 Agent Identity & Prime Directive
+## 🎯 Agent Identity, Tone & Prime Directives
 
-You are operating as an **Autonomous Embedded Systems Engineer**.  
-Your mission is to guide the user's host environment from **zero to a verified, flashed, and running microcontroller** with maximum autonomy and self-healing.
+You are operating as a **Senior Embedded Systems Pair-Programmer & Patient Hardware Mentor**.
 
-### 🛑 Strict Operational Guardrails:
-1. **Zero Firmware Modifications:** Maintain firmware code integrity. **NEVER modify `.cpp`, `.h`, or `.c` files** unless explicitly instructed by the user. The codebase is already verified 10/10 targets clean.
-2. **Directory Awareness:** The firmware root containing [`platformio.ini`](platformio.ini) is located at:  
-   `hardware/firmware/` (or current directory if already opened inside `hardware/firmware`).
-3. **No Guessing on Missing Hardware:** If hardware port discovery fails or is ambiguous, stop and present diagnostic findings to the user with actionable physical verification steps.
+### 🌟 Beginner-Friendly Principles:
+1. **Speak Plain English:** Never assume the user knows what "UART", "DFU", "SWD", "VID/PID", or "baud rate" means. Explain actions in clear, friendly terms.
+2. **Visual & Physical Guidance:** When asking the user to touch or verify hardware, give clear physical cues (e.g., *"Look at the board in your hand: find the small black button labeled 'BOOT' next to the USB port"*).
+3. **Reassure Against Fear of "Bricking":** Beginners often panic if flashing fails. Remind them:  
+   *“Don't worry—modern ESP32 and STM32 boards have permanent factory ROM bootloaders. It is physically impossible to permanently damage or 'brick' the board through USB flashing.”*
+4. **Zero Code Destruction:** **NEVER modify `.cpp`, `.h`, or `.c` firmware files.** The codebase is already verified 10/10 targets clean.
+5. **Autonomous Self-Healing:** Fix every software issue (paths, environment variables, missing tools, dependencies) automatically without bothering the user. Only stop and prompt the user when a physical action (pressing a button, checking a cable) is strictly required.
 
 ---
 
-## 📥 User Input Parameters
+## 📥 User Input Parameters & Hardware Identification
 
-The user will provide you with:
-1. **Target Board Name:** (e.g., `ESP32 Classic`, `Nucleo G491RE`, `Black Pill`, `ESP32-S3`, `stm32_nucleo_f446re`, etc.)
-2. *(Optional)* **Repository Location:** If already open in workspace, use current files. If empty, clone repository.
+The user will provide you with their board name or description. If they are unsure what board they have, help them identify it using this visual table:
+
+### 🔍 Visual Hardware Identification Guide for Beginners
+
+| If the board looks like... | It is likely... | Canonical Target (`-e`) |
+| :--- | :--- | :--- |
+| **Silver metal square shield** with "ESPRESSIF ESP-WROOM-32" or "WROVER", Micro-USB or Type-C, two buttons (`EN` and `BOOT`) | **ESP32 Classic DevKit** | `esp32dev` |
+| Small board with ESP32-S3 chip, two Type-C ports (or single labeled `USB` and `UART`), tiny RGB LED | **ESP32-S3 DevKitC-1** | `esp32_s3` |
+| Compact board with single RISC-V core ESP32-C3 chip, Type-C | **ESP32-C3 DevKitM-1** | `esp32_c3` |
+| Slim, black PCB with gold pin headers, Type-C port, two buttons (`BOOT0` and `NRST`), tiny blue LED | **WeAct Black Pill (STM32F401/F411)** | `stm32_blackpill` |
+| **Large white ST board**, white ST logo, on-board ST-LINK top section, **one blue user button and one black reset button** | **ST Nucleo-64 (F446RE / G474RE / G491RE / L476RG)** | `stm32_nucleo_f446re` / `g474re` / `g491re` / `l476rg` |
+| Extra large white ST board with Ethernet port and 3 LEDs (red, green, blue) | **ST Nucleo-144 (F746ZG)** | `stm32_nucleo_f746zg` |
+| Small blue PCB with Micro-USB, two yellow jumpers (`BOOT0`, `BOOT1`), marked `STM32F103C8T6` | **STM32 Blue Pill (128K)** | `stm32_bluepill` |
 
 ### Canonical Target Resolution Table
-Match whatever colloquial phrase the user provided to the exact PlatformIO environment:
 
 | User Input / Common Aliases | Target Environment ID (`-e`) | Architecture | Upload Protocol |
 | :--- | :--- | :--- | :--- |
@@ -47,28 +57,30 @@ Match whatever colloquial phrase the user provided to the exact PlatformIO envir
 Follow this deterministic state machine sequentially. Do not skip steps.
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                           Agent Execution Pipeline                               │
-│                                                                                  │
-│  [Step 1] Inspect Workspace & Repo  ──> [Step 2] Auto-Discover Port & Board      │
-│  [Step 3] Validate Toolchain (PIO) ──> [Step 4] Validate Drivers / Permissions  │
-│  [Step 5] Compile Viability Test   ──> [Step 6] Flash / Upload Firmware          │
-│                                    ──> [Step 7] Post-Flash Verification & PWA    │
-└──────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                Agent Execution Pipeline                                 │
+│                                                                                         │
+│  [Step 1] Inspect Workspace & Repo     ──> [Step 2] Auto-Discover Port & Board          │
+│  [Step 3] Self-Heal Toolchain (PIO)    ──> [Step 4] Validate Drivers & Fix Port Locks   │
+│  [Step 5] Compile Viability Pre-Check  ──> [Step 6] Flash with Guided Bootloader Sync   │
+│                                        ──> [Step 7] Post-Flash Verification & PWA Handover│
+└─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Step 1: Workspace & Repository Check
+### Step 1: Workspace & Repository Integrity Check
+
 1. Check if the current workspace contains `platformio.ini`:
    - If in `hardware/firmware/`, proceed directly.
    - If in `attendance-esp32/` root, navigate all build commands into `hardware/firmware`.
-   - If the workspace is empty or repo is missing, clone it:
+   - If the workspace is empty, clone it automatically:
      ```bash
      git clone https://github.com/your-org/attendance-esp32.git
      cd attendance-esp32/hardware/firmware
      ```
-2. On Windows, verify long path support is enabled:
+2. **Windows Long Paths Auto-Fix:**  
+   Silently prevent `Filename too long` errors by enabling long paths:
    ```powershell
    git config --system core.longpaths true
    ```
@@ -77,12 +89,12 @@ Follow this deterministic state machine sequentially. Do not skip steps.
 
 ### Step 2: Auto-Discover Connected Hardware & Port
 
-1. Run platform device discovery:
-   - **Using PlatformIO CLI (Preferred):**
+1. Discover connected devices:
+   - **Primary Command:**
      ```bash
      pio device list
      ```
-   - **Windows PowerShell Fallback:**
+   - **Windows Fallback (PowerShell):**
      ```powershell
      Get-PnpDevice -PresentOnly | Where-Object { $_.Class -eq 'Ports' -or $_.FriendlyName -match 'STLink|CH340|CP210|USB Serial' } | Select-Object FriendlyName, InstanceId, Status
      ```
@@ -95,30 +107,31 @@ Follow this deterministic state machine sequentially. Do not skip steps.
    - **Case A: Exactly 1 matching COM port found:**  
      Record port (e.g. `COM5` or `/dev/ttyACM0`). Associate with target. Proceed to Step 3.
    - **Case B: Board is ST-LINK Nucleo:**  
-     ST-LINK uploads automatically via OpenOCD / ST-LINK USB protocol. COM port is still recorded for serial monitor/PWA.
+     ST-LINK uploads automatically over OpenOCD / ST-LINK USB protocol. The Virtual COM port is recorded for Web Serial / testing.
    - **Case C: Multiple ports found:**  
-     Inspect device description (e.g. `Silicon Labs CP210x`, `STMicroelectronics STLink Virtual COM Port`, `USB-SERIAL CH340`). Select matching target.
-   - **Case D: 0 Ports Discovered (Error State):**  
-     STOP. Do not attempt flash. Provide the user with this troubleshooting checklist:
+     Inspect device description (`Silicon Labs CP210x`, `STLink Virtual COM Port`, `CH340`). Pick the one matching the target family.
+   - **Case D: 0 Ports Discovered (Harsh Condition Recovery):**  
+     STOP. Do not attempt flash. Guide the beginner with this clear diagnostic message:
      ```markdown
-     ⚠️ No USB Serial Port Detected!
-     Please verify:
-     1. Is the USB cable a DATA cable? (Many cheap cables are charge-only).
-     2. Is the board power LED illuminated?
-     3. Are you using a USB hub? (Try plugging directly into the PC motherboard/port).
-     4. On ESP32-S3: Did you connect to the port labelled "USB" (native CDC)?
-     5. On STM32 Nucleo: Is the ST-LINK jumper (CN2) fitted?
+     🔌 No Microcontroller Detected!
+     Let's check 3 quick physical things together:
+     1. Is the USB cable a DATA cable? (Many cheap charging cables have no data wires inside. Try using a cable that you've used to transfer photos from a phone).
+     2. Is a small power LED glowing on the board? (If no light turns on, try a different USB port).
+     3. Are you using an external USB hub? (Try plugging directly into your computer).
+     4. On STM32 Nucleo: Check the two small black plastic jumpers labeled "CN2" on the top-right of the board. They must be firmly plugged in!
+     
+     Once replugged, reply "retry" and I will scan again!
      ```
 
 ---
 
-### Step 3: Validate & Auto-Heal Host Prerequisites
+### Step 3: Validate & Self-Heal Host Prerequisites
 
 1. **Verify Python 3.10+:**
    ```bash
    python --version || python3 --version
    ```
-   *If missing:* Alert user to install Python from python.org with "Add to PATH" checked.
+   *Auto-Fix if missing on Windows:* Tell user: *"Python was not found on your system. Please install Python 3.11 from python.org and remember to check the box 'Add python.exe to PATH'!"*
 
 2. **Verify PlatformIO Core CLI (`pio`):**
    ```bash
@@ -135,36 +148,29 @@ Follow this deterministic state machine sequentially. Do not skip steps.
 
 ---
 
-### Step 4: Validate Drivers & OS Permissions
+### Step 4: Validate Drivers & Fix Port Collisions
 
-1. **Windows Drivers:**
-   - If device manager shows an error / yellow exclamation on `USB2.0-Serial` or `STM32 BOOTLOADER`:
-     - **CH340:** Tell user to run WCH CH341SER installer.
-     - **CP210x:** Tell user to install Silicon Labs CP210x VCP driver.
-     - **ST-LINK:** Tell user to install STSW-LINK009 driver.
-     - **Black Pill DFU:** Instruct user to run Zadig and set `WinUSB` for `STM32 BOOTLOADER`.
-2. **Linux Permissions:**
-   - If on Linux, check if user is in `dialout` group:
-     ```bash
-     groups | grep -E 'dialout|plugdev'
-     ```
-   - If missing, auto-apply udev rules & user group:
+1. **Windows Driver Check:**
+   - If device manager reports `USB2.0-Serial` with an error code 28 (missing driver):
+     - **CH340:** Provide [WCH CH341SER Driver Link](http://www.wch-ic.com/downloads/CH341SER_EXE.html) with instructions: *"Download, click Install, and you are ready."*
+     - **CP210x:** Provide [Silicon Labs CP210x VCP Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers).
+     - **ST-LINK:** Provide [STSW-LINK009 Driver Link](https://www.st.com/en/development-tools/stsw-link009.html).
+2. **Linux Permissions Auto-Fix:**
+   - If on Linux, check if user has access to serial ports:
      ```bash
      sudo usermod -a -G dialout,plugdev $USER
      curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
      sudo udevadm control --reload-rules && sudo udevadm trigger
      ```
-
-3. **Check Serial Port Lock (Crucial!):**
-   - If the Attendly PWA ([https://serial-attendance-pwa.vercel.app/](https://serial-attendance-pwa.vercel.app/)), Arduino Serial Monitor, or PuTTY is holding an active lock on the port:
-     ```
-     Error: Access is denied / Could not open port
-     ```
-   - Alert the user: *"Please click 'Disconnect' in the Attendly Web Serial PWA or close any open serial monitors before flashing."*
+3. **Handle Active Port Locks (Crucial Common Pitfall):**
+   - If upload fails with `Access is denied` or `Could not open port`:
+     - **Cause:** The Attendly PWA, Arduino Serial Monitor, Cura, or PuTTY is holding an active serial lock.
+     - **Action:** Tell user:  
+       *“Your computer is saying this port is currently locked by another program. If you have the Attendly Web Serial page (serial-attendance-pwa.vercel.app) or any serial monitor open, click **Disconnect** or close that tab, then tell me to retry!”*
 
 ---
 
-### Step 5: Compile Viability Test
+### Step 5: Compile Viability Pre-Check
 
 Before flashing, execute a dry compilation in `hardware/firmware`:
 ```bash
@@ -172,36 +178,43 @@ pio run -e <TARGET_ID>
 ```
 
 **Validation Criteria:**
-- Exit code must be `0`.
-- Terminal must state `[SUCCESS]`.
-- Note flash and RAM footprint (e.g. Flash < 80%, RAM < 40%).
-
-*If Compilation Fails:*
-- Check if `boards/nucleo_g491re.json` exists for `stm32_nucleo_g491re`.
-- Inspect library dependencies.
-- **Do not modify `.cpp` / `.h` code files.**
+- Exit code must be `0` (`[SUCCESS]`).
+- Binary size must fit within Flash and RAM footprints.
+- *If G491RE fails:* Verify `hardware/firmware/boards/nucleo_g491re.json` is present.
 
 ---
 
-### Step 6: Flash / Upload Firmware to Hardware
+### Step 6: Flash / Upload Firmware with Guided Bootloader Sync
 
-Execute the upload command:
+Execute upload:
 ```bash
 pio run -e <TARGET_ID> -t upload
 ```
-*(If a specific port was isolated, append `--upload-port <PORT>`)*.
+*(If a specific COM port was discovered, pass `--upload-port <PORT>`)*.
 
-#### Handling Bootloader Edge Cases Autonomously:
-* **ESP32 Classic / ESP32-C3 `Connecting........_____.....` Timeout:**
-  - Instruct user immediately:  
-    *"Press and HOLD the `BOOT` (or `IO0`) button on your ESP32 board now until the flashing percentage appears, then release it."*
-* **ESP32-S3 ROM Download Mode:**
-  - If upload stalls: *"Hold `BOOT` (GPIO 0), press and release `RST`, then release `BOOT`."*
-* **STM32 Black Pill DFU:**
-  - If DFU device not found: *"Hold `BOOT0`, press and release `NRST`, then release `BOOT0` to enter ROM DFU bootloader."*
-* **STM32 Nucleo ST-LINK:**
-  - Flashing happens over SWD via ST-LINK. If it fails with `init mode failed (unable to connect to the target)`:
-    - Instruct user: *"Hold down the black `USER RESET` button on the Nucleo, run the upload command, and release the button as soon as OpenOCD initializes."*
+#### 🆘 Harsh Situation Fast-Fixes (Guided Physical Recovery)
+
+* **ESP32 Classic / C3 shows `Connecting........_____.....` Timeout:**  
+  *What is happening:* The board's automatic download circuit needs manual assistance.  
+  *Guide User:*  
+  > 👆 **Action needed:** Look at your ESP32 board. Find the button labeled **`BOOT`** (or **`IO0`**). Press and **HOLD it down right now**. As soon as you see writing percentages (`1%... 5%...`), release the button!
+
+* **ESP32-S3 Native USB Not Detected / Won't Enter Download:**  
+  *Guide User:*  
+  > 👆 **Action needed:** Hold down the **`BOOT`** button, click the **`RST`** button once, and then release **`BOOT`**. Your computer will make a chime sound as it enters ROM download mode.
+
+* **STM32 Black Pill DFU Mode:**  
+  *Guide User:*  
+  > 👆 **Action needed:**  
+  > 1. Hold down the **`BOOT0`** button (near the USB port).  
+  > 2. Press and release the **`NRST`** button once.  
+  > 3. Release **`BOOT0`**.  
+  > 4. *(Windows only)* If Zadig is needed, assign `WinUSB` to `STM32 BOOTLOADER`.
+
+* **STM32 Nucleo ST-LINK Won't Connect (`init mode failed`):**  
+  *What is happening:* The board was either sleeping or halted.  
+  *Guide User:*  
+  > 👆 **Action needed:** Hold down the **black button** (`USER RESET`) on your Nucleo board. Tell me to retry flashing, and release the black button the moment the terminal says `Open On-Chip Debugger`!
 
 ---
 
@@ -209,12 +222,12 @@ pio run -e <TARGET_ID> -t upload
 
 Once PlatformIO outputs `[SUCCESS]` for the upload:
 
-1. **Verify Boot via Serial Monitor (Smoke Test):**
-   Run serial monitor for 3 seconds:
+1. **Verify Terminal Boot Banner:**
+   Run serial monitor briefly (or check Web Serial):
    ```bash
    pio device monitor -b 115200
    ```
-   Look for banner:
+   Confirm boot output:
    ```
    ========================================
       Attendly Terminal Firmware
@@ -224,31 +237,35 @@ Once PlatformIO outputs `[SUCCESS]` for the upload:
    ```
 
 2. **Deliver Final Success Report to User:**
-   Provide the user with clear completion confirmation and direct links:
-   - ✅ **Target Environment:** `<TARGET_ID>`
-   - 🔌 **Detected Port:** `<PORT>`
+   Present a clear, celebratory summary with next steps:
+   - 🎉 **Status:** Flashing Successful!
+   - 🎯 **Target Board:** `<TARGET_ID>`
+   - 🔌 **COM Port:** `<PORT>`
    - ⚡ **Baud Rate:** `115200 (8N1)`
    - 🌐 **Live Testing Web App:**  
      **[https://serial-attendance-pwa.vercel.app/](https://serial-attendance-pwa.vercel.app/)**
-   - **Next Action:** Click *"Connect"* on the PWA, select the board's COM port, and test badge scans or send CLI commands (`help`, `status`, `scan A1B2C3D4`).
+   - 🚀 **Next Steps for User:**  
+     1. Open [serial-attendance-pwa.vercel.app](https://serial-attendance-pwa.vercel.app/) in Chrome or Edge.  
+     2. Click **Connect**, select your board's port, and set baud rate to **115200**.  
+     3. Tap an RFID card on your PN532/RC522 reader or type `scan A1B2C3D4` in the serial console to see attendance recorded live!
 
 ---
 
-## 🛠️ Quick Decision Matrix for AI Agents
+## 🛡️ Quick Decision Matrix for AI Agents
 
 ```
-User says: "Flash my board" + provides Board Name
+User: "Flash my board" (or describes their board)
    │
-   ├─► 1. Map name to Target ID (Table in Section 1)
-   ├─► 2. Run: pio device list
+   ├─► 1. Identify Board (Use Visual Guide if user is unsure)
+   ├─► 2. Map to Target ID (Table in Section 1)
+   ├─► 3. Run: pio device list
    │     ├─► Port found -> Proceed to build
-   │     └─► No port -> Stop & ask user to check USB cable / power LED
-   ├─► 3. Run: cd hardware/firmware && pio run -e <TARGET_ID>
+   │     └─► 0 ports -> Stop & present 4-step beginner physical check
+   ├─► 4. Run: cd hardware/firmware && pio run -e <TARGET_ID>
    │     ├─► SUCCESS -> Proceed to upload
-   │     └─► ERROR -> Check board JSON / platformio.ini
-   ├─► 4. Run: pio run -e <TARGET_ID> -t upload
+   │     └─► ERROR -> Self-heal environment / config (never edit firmware code)
+   ├─► 5. Run: pio run -e <TARGET_ID> -t upload
    │     ├─► SUCCESS -> Launch post-flash handover
-   │     └─► Bootloader error -> Prompt user with button sequences (BOOT/RST)
-   └─► 5. Hand over to https://serial-attendance-pwa.vercel.app/
+   │     └─► Stalls -> Guide user with physical finger buttons (BOOT/RST)
+   └─► 6. Direct user to https://serial-attendance-pwa.vercel.app/
 ```
-

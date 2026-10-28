@@ -36,11 +36,15 @@ A single codebase compiles out-of-the-box for **10 distinct microcontroller targ
 
 ## 📑 Table of Contents
 
-1. [🛠️ Pre-Flashing Preparation & Checklist](#1-pre-flashing-preparation--checklist)
-   - [Host Toolchain Installation](#host-toolchain-installation)
-   - [USB Drivers & Bootloader Utilities](#usb-drivers--bootloader-utilities)
-   - [COM Port Isolation & Attendly Sync](#com-port-isolation--attendly-sync)
-   - [Electrical & Logic Level Rules](#electrical--logic-level-rules)
+1. [🛠️ Fresh PC Setup & Pre-Flashing Guide](#1-fresh-pc-setup--pre-flashing-guide)
+   - [1.1 Phase 1: Foundational Prerequisites (Git, Python, VS Code)](#11-phase-1-foundational-prerequisites)
+   - [1.2 Phase 2: PlatformIO IDE Extension Setup in VS Code](#12-phase-2-platformio-ide-extension-setup-in-vs-code)
+   - [1.3 Phase 3: Opening the Project Correctly (Avoiding the Directory Trap)](#13-phase-3-opening-the-project-correctly-avoiding-the-directory-trap)
+   - [1.4 Phase 4: Automated Toolchain & Library Provisioning](#14-phase-4-automated-toolchain--library-provisioning)
+   - [1.5 Phase 5: Hardware USB Drivers & Host Permissions](#15-phase-5-hardware-usb-drivers--host-permissions)
+   - [1.6 Phase 6: First Verification Smoke Test](#16-phase-6-first-verification-smoke-test)
+   - [1.7 Serial Port Isolation Rules (Avoid Access Denied)](#17-serial-port-isolation-rules-avoid-access-denied)
+   - [1.8 Electrical & Logic Level Safety Rules](#18-electrical--logic-level-safety-rules)
 2. [⚡ 1-Minute Quick Start](#2-1-minute-quick-start)
 3. [📊 Master Verification & Resource Usage Matrix](#3-master-verification--resource-usage-matrix)
 4. [🟦 ESP32 Family Modular Guides](#4-esp32-family-modular-guides)
@@ -61,37 +65,212 @@ A single codebase compiles out-of-the-box for **10 distinct microcontroller targ
 
 ---
 
-## 1. 🛠️ Pre-Flashing Preparation & Checklist
+## 1. 🛠️ Fresh PC Setup & Pre-Flashing Guide
 
-Before plugging in your board or executing any flash commands, complete this 4-step pre-flight checklist.
+If you are starting on a **brand-new or freshly formatted PC**, follow this comprehensive step-by-step setup guide to prepare your operating system, toolchains, extensions, and hardware drivers.
 
-### Step 1: Host Toolchain Installation
-Ensure you have the PlatformIO development environment installed:
-* **Option A (VS Code IDE):** Install the [PlatformIO IDE Extension](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide) in VS Code.
-* **Option B (PlatformIO Core CLI):**
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                               Fresh PC Setup Roadmap                                   │
+│                                                                                        │
+│  [Phase 1] Prerequisites    ──>  [Phase 2] VS Code Extensions  ──> [Phase 3] Open Subfolder│
+│  • Git (Long Paths enabled)     • PlatformIO IDE                  • Open hardware/     │
+│  • Python 3.10+ (on PATH)       • Microsoft C/C++                   firmware folder    │
+│  • VS Code                      • Wait for Core Penv                                   │
+│                                                                                        │
+│                                           │                                            │
+│                                           ▼                                            │
+│  [Phase 6] Smoke Test       <──  [Phase 5] USB Drivers         <── [Phase 4] Toolchains│
+│  • pio run -e esp32dev          • CP210x / CH340 / ST-LINK        • Auto-provisioned   │
+│  • 0 Errors Verified             • Zadig WinUSB (DFU)              by PlatformIO on    │
+│                                  • Linux udev rules                first build         │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 1.1 Phase 1: Foundational Prerequisites
+
+#### 1. Git Installation & Long Path Configuration
+Git is required to clone the repository and fetch dependencies.
+* **Windows:**
+  1. Download the 64-bit installer from [git-scm.com](https://git-scm.com/).
+  2. During installation, ensure **"Enable Git Credential Manager"** and **"Enable Symbolic Links"** are checked.
+  3. ⚠️ **Enable Windows Long Paths (Crucial):** Embedded cross-compilers have deep directory trees. Open PowerShell as Administrator and run:
+     ```powershell
+     git config --system core.longpaths true
+     ```
+* **macOS:** Open Terminal and install command line developer tools:
   ```bash
-  pip install --upgrade platformio
-  pio --version  # Verify installation (v6.1+)
+  xcode-select --install
+  ```
+  *(Or via Homebrew: `brew install git`)*
+* **Linux (Ubuntu / Debian):**
+  ```bash
+  sudo apt update && sudo apt install -y git build-essential
   ```
 
-### Step 2: USB Drivers & Bootloader Utilities
-Different boards require specific host USB drivers to enumerate properly:
+#### 2. Python 3.10+ Installation
+PlatformIO Core's underlying engine requires Python.
+* **Windows:**
+  1. Download Python 3.11 or 3.12 from [python.org/downloads](https://www.python.org/downloads/).
+  2. ⚠️ **CRITICAL STEP:** On the very first installer screen, you **MUST CHECK THE BOX**:
+     ```
+     ☑ Add python.exe to PATH
+     ```
+     *(If you do not check this box, PlatformIO will not be able to spawn build processes).*
+  3. Click **"Install Now"**.
+  4. On the final "Setup was successful" screen, click **"Disable path length limit"** if the option appears.
+  5. Verify by opening a new terminal window:
+     ```powershell
+     python --version
+     pip --version
+     ```
+* **macOS:** Modern macOS versions include Python 3, or install via Homebrew: `brew install python`.
+* **Linux (Ubuntu / Debian):** Ensure Python and `venv` support are installed:
+  ```bash
+  sudo apt update && sudo apt install -y python3 python3-pip python3-venv
+  ```
 
-| Microcontroller Target | Required Host Driver | Download / Setup Method |
-| :--- | :--- | :--- |
-| **ESP32 Classic (DevKit)** | Silicon Labs CP210x or WCH CH340 | [CP210x VCP](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers) / [CH340 Driver](http://www.wch-ic.com/downloads/CH341SER_EXE.html) |
-| **ESP32-S3 / ESP32-C3** | Native USB CDC / JTAG | Native in Windows 10/11 & Linux (no driver required) |
-| **STM32 Nucleo (All)** | ST-LINK USB Virtual COM & Debugger | [STSW-LINK009 Driver](https://www.st.com/en/development-tools/stsw-link009.html) |
-| **STM32 Black Pill (DFU)** | WinUSB Driver for STM32 DFU Mode | Use [Zadig](https://zadig.akeo.ie/) to assign `WinUSB` to `STM32 BOOTLOADER` |
-| **STM32 Blue Pill / Standalone** | ST-LINK v2 Dongle or USB-UART | Install STSW-LINK009 or standard FTDI/CH340 drivers |
+#### 3. Visual Studio Code Installation
+* Download and install the latest VS Code from [code.visualstudio.com](https://code.visualstudio.com/).
+* On Windows, keep the options **"Add to PATH"** and **"Register Code as an editor for supported file types"** enabled during setup.
 
-### Step 3: COM Port Isolation & Attendly Sync
+---
+
+### 1.2 Phase 2: PlatformIO IDE Extension Setup in VS Code
+
+1. Launch **Visual Studio Code**.
+2. Open the Extensions marketplace:
+   - Shortcut: `Ctrl + Shift + X` (Windows/Linux) or `Cmd + Shift + X` (macOS).
+3. Search for and install the two essential extensions:
+   * **`PlatformIO IDE`** (by *PlatformIO*, Extension ID: `platformio.platformio-ide`) — Click **Install**.
+   * **`C/C++`** (by *Microsoft*, Extension ID: `ms-vscode.cpptools`) — Click **Install** (provides C++17 syntax highlighting, code navigation, and IntelliSense).
+4. **Wait for PlatformIO Core Background Provisioning:**
+   - Immediately after installing PlatformIO IDE, look at the bottom status bar and notifications.
+   - PlatformIO will automatically download and set up its isolated Python virtual environment inside `~/.platformio/penv`.
+   - **Do NOT close VS Code!** Wait 1–3 minutes until a prompt appears:  
+     *"PlatformIO IDE has been successfully installed! Please reload/restart VS Code."*
+   - Click **Reload Now** (or manually restart VS Code).
+5. **Verify Extension Activation:**
+   - A new **PlatformIO Alien Head icon 👽** will now appear on the left Activity Bar.
+   - The **PlatformIO toolbar** will appear at the bottom blue status bar:
+     - Checkmark (`✓`): **Build**
+     - Right Arrow (`→`): **Upload / Flash**
+     - Plug (`🔌`): **Serial Monitor**
+     - Terminal (`💻`): **PlatformIO Core CLI Terminal**
+
+---
+
+### 1.3 Phase 3: Opening the Project Correctly (Avoiding the Directory Trap)
+
+> [!WARNING]
+> **Avoid the "No Project Found" Directory Trap!**  
+> In this repository, the firmware source code and its configuration file [`platformio.ini`](file:///c:/Users/1sree/Documents/attendance-esp32/hardware/firmware/platformio.ini) are located inside:  
+> **`attendance-esp32/hardware/firmware/`**  
+> If you open the top-level repository folder (`attendance-esp32`), VS Code will not find `platformio.ini` in the workspace root, and the PlatformIO status bar buttons will **not appear**.
+
+#### Recommended Opening Procedure:
+1. Clone the repository onto your fresh PC:
+   ```bash
+   git clone https://github.com/your-org/attendance-esp32.git
+   ```
+2. In VS Code, select **`File` -> `Open Folder...`** (or `Cmd + O` on macOS).
+3. Navigate directly to and select:
+   ```
+   attendance-esp32/hardware/firmware
+   ```
+4. PlatformIO will immediately detect [`platformio.ini`](file:///c:/Users/1sree/Documents/attendance-esp32/hardware/firmware/platformio.ini), index all 10 target environments, and activate the bottom status bar buttons automatically!
+
+*(If you prefer working from the terminal or root folder, always run `cd hardware/firmware` before executing any `pio` commands).*
+
+---
+
+### 1.4 Phase 4: Automated Toolchain & Library Provisioning
+
+One of PlatformIO's greatest strengths is that **you do NOT need to manually install Arduino IDE, compiler toolchains, or vendor SDKs**.
+
+When you trigger your first build, PlatformIO automatically provisions:
+* **Compilers:** `toolchain-gccarmnoneeabi` (GCC 12/10 for ARM Cortex-M), `toolchain-xtensa-esp32` (for ESP32 Classic/S3), `toolchain-riscv32-esp` (for ESP32-C3).
+* **Frameworks:** `framework-arduinoespressif32`, `framework-arduinoststm32`.
+* **Upload Utilities:** `esptoolpy`, `tool-openocd`, `tool-stm32duino`.
+* **Project Libraries:** `Adafruit SSD1306`, `Adafruit BusIO`, `Adafruit GFX`, `arduino-libraries/SD`.
+
+All toolchains are isolated inside `~/.platformio/packages/`, keeping your global operating system clean and clutter-free.  
+*(Note: Initial provisioning takes 2–4 minutes depending on internet connection speed; subsequent builds complete in seconds).*
+
+---
+
+### 1.5 Phase 5: Hardware USB Drivers & Host Permissions
+
+Fresh operating systems often do not ship with the USB-to-UART or ST-LINK debugger drivers needed to communicate with microcontrollers. Install the driver matching your board:
+
+| Board Family | Bridge Chip / Protocol | Required Host Driver | Setup Procedure |
+| :--- | :--- | :--- | :--- |
+| **ESP32 Classic (DevKit / Clones)** | WCH CH340 / CH341 | [WCH CH341SER Driver](http://www.wch-ic.com/downloads/CH341SER_EXE.html) | Run `CH341SER.EXE` and click "Install". |
+| **ESP32 Classic (Official / NodeMCU)**| Silicon Labs CP2102 / CP2104 | [Silicon Labs CP210x VCP](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers) | Download Universal Windows Driver, right-click `silabser.inf` -> "Install". |
+| **ESP32-S3 / ESP32-C3** | Native On-Chip USB CDC / JTAG | Native OS CDC Driver | **No driver installation required** on Windows 10/11, macOS, or modern Linux. |
+| **STM32 Nucleo-64 & Nucleo-144** | On-board ST-LINK/V2-1 or V3 Debugger & VCP | [STSW-LINK009 Driver](https://www.st.com/en/development-tools/stsw-link009.html) | Download from ST and run `dpinst_amd64.exe` to enable ST-Link Virtual COM & debug bridge. |
+| **STM32 Black Pill (F401 / F411)** | Native USB DFU Bootloader | WinUSB Driver | 1. Enter DFU (hold `BOOT0`, tap `NRST`, release `BOOT0`).<br>2. Open [Zadig](https://zadig.akeo.ie/).<br>3. Select `STM32 BOOTLOADER` -> Choose `WinUSB` -> Click "Replace Driver". |
+| **STM32 Blue Pill / Standalone** | External ST-LINK v2 Dongle or USB-UART | STSW-LINK009 or FTDI/CH340 | Plug ST-LINK v2 USB stick and install STSW-LINK009. |
+
+#### Linux Host Permissions (udev rules)
+On Linux systems (Ubuntu, Debian, Arch, Fedora), non-root users are blocked from serial devices (`/dev/ttyUSB*`, `/dev/ttyACM*`) and USB DFU/ST-LINK programmers by default. Run these commands once:
+```bash
+# 1. Add your user to dialout and plugdev groups:
+sudo usermod -a -G dialout $USER
+sudo usermod -a -G plugdev $USER
+
+# 2. Install official PlatformIO udev rules:
+curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+
+# 3. Reload udev daemon:
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
+# 4. IMPORTANT: Log out of your Linux desktop session and log back in for permissions to apply!
+```
+
+---
+
+### 1.6 Phase 6: First Verification Smoke Test
+
+Before plugging in any physical microcontroller, verify that your development environment, compilers, and dependencies are 100% operational with a smoke test:
+
+1. Open the PlatformIO terminal in VS Code:
+   - Click the **Terminal icon 💻** on the bottom status bar, or open integrated terminal (`Ctrl + \`` / `Cmd + \``).
+2. Ensure you are in the `hardware/firmware` folder.
+3. Run a compilation smoke test for the default ESP32 target:
+   ```bash
+   pio run -e esp32dev
+   ```
+   *(Or click the checkmark `✓` in the bottom status bar).*
+4. The output should automatically download any needed packages, compile all C++17 modules, and finish with:
+   ```
+   ========================= [SUCCESS] Took XX.XXs =========================
+   Environment    Status    Duration
+   -------------  --------  ------------
+   esp32dev       SUCCESS   00:00:0X.XXX
+   ```
+5. Test an STM32 ARM target as well:
+   ```bash
+   pio run -e stm32_nucleo_f446re
+   ```
+   If both commands exit with `[SUCCESS]`, your fresh PC setup is **100% verified and ready for hardware flashing!**
+
+---
+
+### 1.7 Serial Port Isolation Rules (Avoid Access Denied)
+
 > [!WARNING]
 > **Avoid Port Access Conflicts!**  
-> Operating systems permit only **one active application** to hold an open lock on a serial COM port at a time. If the **Attendly PWA**, Arduino Serial Monitor, or PuTTY is connected to your board's COM port, PlatformIO will fail with `Access is denied` or `Could not open port`.  
-> **Always click "Disconnect" in Attendly before flashing!**
+> Operating systems permit only **one active application** to hold an open lock on a serial COM port at a time. If the **Attendly PWA** ([serial-attendance-pwa.vercel.app](https://serial-attendance-pwa.vercel.app/)), Arduino Serial Monitor, or PuTTY is connected to your board's COM port, PlatformIO will fail with `Access is denied` or `Could not open port`.  
+> **Always click "Disconnect" in the Attendly PWA before flashing!**
 
-### Step 4: Electrical & Logic Level Rules
+---
+
+### 1.8 Electrical & Logic Level Safety Rules
+
 * **Logic Level:** All supported microcontrollers operate strictly at **3.3V logic**. Never supply 5V directly to ESP32 GPIOs or STM32 non-5V-tolerant pins.
 * **I²C Pull-Ups:** The SSD1306 OLED display requires pull-up resistors on `SDA` and `SCL` (usually 4.7kΩ, pre-soldered on most standard breakout modules).
 * **SPI Bus Sharing:** The PN532 RFID reader and MicroSD module share the same SPI bus (`SCK`, `MISO`, `MOSI`) but **MUST** have separate Chip Select (`CS`) pins.

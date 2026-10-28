@@ -2,7 +2,11 @@
 // utils.cpp — Utility Functions Implementation
 // ============================================================================
 
-#include "utils.h"
+#include "app_utils.h"
+
+#if defined(ARDUINO_ARCH_STM32)
+extern "C" char* sbrk(int incr);
+#endif
 
 namespace Utils {
 
@@ -27,7 +31,14 @@ String formatMacAddress(const uint8_t* mac) {
 }
 
 uint32_t freeHeap() {
+#if defined(ESP32)
     return ESP.getFreeHeap();
+#elif defined(ARDUINO_ARCH_STM32)
+    char top;
+    return &top - reinterpret_cast<char*>(sbrk(0));
+#else
+    return 0;
+#endif
 }
 
 String uptimeString() {

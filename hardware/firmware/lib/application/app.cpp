@@ -5,7 +5,7 @@
 #include "app.h"
 #include "logger.h"
 #include "version.h"
-#include "utils.h"
+#include "app_utils.h"
 #include "constants.h"
 #include <time.h>
 
@@ -123,7 +123,9 @@ void App::handleInit() {
         // Initialize all managers
         _led->init();
         _buzzer->init();
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
         _wifi.init();
+#endif
         _rfid->init();
         _repo->init();
         _api.init(_repo);
@@ -140,12 +142,18 @@ void App::handleInit() {
         LOG_INFO("All hardware initialized OK");
         LOG_INFO("Free heap: %u bytes", Utils::freeHeap());
 
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
         // Proceed to WiFi connection
         _sm.transition(SystemState::WIFI_CONNECTING);
+#else
+        LOG_INFO("Operating in standalone offline/serial mode — system READY");
+        _sm.transition(SystemState::READY);
+#endif
     }
 }
 
 void App::handleWifiConnecting() {
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     if (_sm.stateChanged()) {
         _wifiAnimCounter = 0;
         _lastWifiAnimMs = 0;
@@ -174,9 +182,13 @@ void App::handleWifiConnecting() {
         LOG_WARN("WiFi failed after extended timeout. Proceeding in OFFLINE mode.");
         _sm.transition(SystemState::READY);
     }
+#else
+    _sm.transition(SystemState::READY);
+#endif
 }
 
 void App::handleBackendConnecting() {
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     if (_sm.stateChanged()) {
         _display->showBackendConnecting();
     }
@@ -204,6 +216,9 @@ void App::handleBackendConnecting() {
             _sm.transition(SystemState::FAILED);
         }
     }
+#else
+    _sm.transition(SystemState::READY);
+#endif
 }
 
 void App::handleReady() {
@@ -211,7 +226,11 @@ void App::handleReady() {
     String currentTimeStr = getFormattedTime();
 
     if (_sm.stateChanged() || currentTimeStr != lastTimeStr) {
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
         _display->showReady(_wifi.ip(), _wifi.rssi(), currentTimeStr);
+#else
+        _display->showReady("Serial Mode", 0, currentTimeStr);
+#endif
         if (_sm.stateChanged()) {
             _led->allOff();
             _led->greenOn();
@@ -220,15 +239,19 @@ void App::handleReady() {
     }
 
     // Update managers
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     _wifi.update();
+#endif
     _rfid->update();
 
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     // Check WiFi
     if (_wifi.justDisconnected()) {
         _led->allOff();
         _sm.transition(SystemState::NETWORK_ERROR);
         return;
     }
+#endif
 
     // Check for RFID card
     if (_rfid->cardDetected()) {
@@ -241,7 +264,11 @@ void App::handleReady() {
     unsigned long now = millis();
     if (now - _lastRssiUpdateMs >= 1000) { // Update every 1s for the clock
         _lastRssiUpdateMs = now;
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
         _display->showReady(_wifi.ip(), _wifi.rssi(), getFormattedTime());
+#else
+        _display->showReady("Serial Mode", 0, getFormattedTime());
+#endif
     }
 }
 
@@ -266,8 +293,9 @@ void App::handleSending() {
     if (_sm.stateChanged()) {
         LOG_INFO("Submitting attendance for UID=%s", _currentUID.c_str());
 
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
         // Check WiFi before sending
-        if (!_wifi.connected()) {
+        if (!CFG_STANDALONE_MODE && !_wifi.connected()) {
             LOG_WARN("Offline mode: Storing record locally");
             AttendanceResponse resp;
             resp.result = AttendanceResult::NETWORK_ERROR;
@@ -275,6 +303,7 @@ void App::handleSending() {
             processAttendanceResult(resp);
             return;
         }
+#endif
 
         // Call API (mocked or real)
         AttendanceResponse resp = _api.submitAttendance(_currentUID);
@@ -288,7 +317,9 @@ void App::handleSuccess() {
     }
 
     // Update non-blocking managers
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     _wifi.update();
+#endif
     _rfid->update();
 
     // Auto-return to READY
@@ -310,7 +341,9 @@ void App::handleFailed() {
     }
 
     // Update non-blocking managers
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     _wifi.update();
+#endif
     _rfid->update();
 
     // Auto-return to READY
@@ -334,6 +367,7 @@ void App::handleNetworkError() {
         LOG_ERROR("Network error — attempting recovery");
     }
 
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     // Keep trying to reconnect
     _wifi.update();
 
@@ -341,6 +375,7 @@ void App::handleNetworkError() {
         LOG_INFO("WiFi recovered!");
         _sm.transition(SystemState::READY);
     }
+#endif
 
     // Auto-return to READY after a delay so we can continue scanning offline
     if (_sm.timeInState() > DISPLAY_RESULT_DURATION_MS) {

@@ -144,7 +144,13 @@ void CliManager::printStatus() {
     doc["type"] = "status";
     JsonObject data = doc["data"].to<JsonObject>();
     
+#if defined(ESP32)
     data["board"] = "ESP32";
+#elif defined(ARDUINO_ARCH_STM32)
+    data["board"] = "STM32";
+#else
+    data["board"] = "Generic";
+#endif
     data["firmware"] = "1.0.0";
     
     if (_repo) {

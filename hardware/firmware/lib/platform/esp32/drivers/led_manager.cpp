@@ -1,3 +1,4 @@
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 // ============================================================================
 // led_manager.cpp — Non-blocking LED Blink Patterns
 // ============================================================================
@@ -93,3 +94,5 @@ void LedManager::startPattern(int pin, uint8_t count, unsigned long onMs, unsign
 
     digitalWrite(pin, HIGH);
 }
+
+#endif // ARDUINO_ARCH_ESP32

@@ -1,3 +1,4 @@
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 // ============================================================================
 // web_manager.cpp — Embedded Dashboard Server
 // ============================================================================
@@ -314,3 +315,5 @@ void WebManager::handleGetLastScan() {
     String uid = _rfid->lastUID();
     _server.send(200, "application/json", "{\"uid\":\"" + uid + "\"}");
 }
+
+#endif // ARDUINO_ARCH_ESP32

@@ -1,9 +1,10 @@
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 // ============================================================================
 // rfid_manager.cpp — PN532 RFID Reader Manager (Software SPI)
 // ============================================================================
 
 #include "rfid_manager.h"
-#include "utils.h"
+#include "app_utils.h"
 #include "logger.h"
 #include "pins.h"
 
@@ -131,3 +132,5 @@ bool RfidManager::cardDetected() {
 String RfidManager::lastUID() {
     return _lastUID;
 }
+
+#endif // ARDUINO_ARCH_ESP32

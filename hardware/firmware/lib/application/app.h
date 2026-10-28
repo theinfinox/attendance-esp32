@@ -12,7 +12,9 @@
 #include "ILed.h"
 #include "IBuzzer.h"
 #include "IAttendanceRepository.h"
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 #include "wifi_manager.h"
+#endif
 #include "api_client.h"
 
 class App {
@@ -24,7 +26,9 @@ public:
 private:
     // --- Managers ---
     StateMachine           _sm;
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     WifiManager            _wifi;
+#endif
     ApiClient              _api;
     
     // --- Interfaces ---

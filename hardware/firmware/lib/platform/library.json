@@ -3,7 +3,9 @@
   "build": {
     "srcFilter": [
       "+<esp32/drivers/*.cpp>",
-      "+<esp32/repositories/*.cpp>"
+      "+<esp32/repositories/*.cpp>",
+      "+<stm32/drivers/*.cpp>",
+      "+<stm32/repositories/*.cpp>"
     ]
   }
 }

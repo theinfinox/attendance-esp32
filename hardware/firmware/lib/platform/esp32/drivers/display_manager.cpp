@@ -1,3 +1,4 @@
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 // ============================================================================
 // display_manager.cpp — SSD1306 OLED Display Renderer (U8g2)
 // ============================================================================
@@ -265,3 +266,5 @@ void DisplayManager::showShutdown(const String& reason) {
 void DisplayManager::showFailed() {
     drawStatusScreen("Failed", "Operation Error", "!");
 }
+
+#endif // ARDUINO_ARCH_ESP32

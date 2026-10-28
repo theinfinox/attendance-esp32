@@ -1,3 +1,4 @@
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 // ============================================================================
 // storage.cpp — Offline Storage & Embedded DB
 // ============================================================================
@@ -174,3 +175,5 @@ bool LittleFSAttendanceRepository::markAttendance(const String& uid, const Strin
     file.close();
     return true;
 }
+
+#endif // ARDUINO_ARCH_ESP32

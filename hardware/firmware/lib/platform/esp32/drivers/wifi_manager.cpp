@@ -1,3 +1,4 @@
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 // ============================================================================
 // wifi_manager.cpp — WiFi Connection Manager
 // ============================================================================
@@ -88,3 +89,5 @@ String WifiManager::ip() const {
 String WifiManager::mac() const {
     return WiFi.macAddress();
 }
+
+#endif // ARDUINO_ARCH_ESP32

@@ -2,6 +2,8 @@
 // buzzer_manager.cpp — Non-blocking Buzzer Tone Patterns (ESP32 LEDC PWM)
 // ============================================================================
 
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+
 #include "buzzer_manager.h"
 #include "logger.h"
 #include "pins.h"
@@ -114,3 +116,5 @@ void BuzzerManager::startPattern(unsigned int freq, uint8_t count,
 
     playTone(PIN_BUZZER, freq);
 }
+
+#endif // ARDUINO_ARCH_ESP32

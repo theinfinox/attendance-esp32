@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/ESP32-Classic%20%7C%20S3%20%7C%20C3-red?logo=espressif&style=for-the-badge" alt="ESP32" />
   <img src="https://img.shields.io/badge/STM32-F1%20%7C%20F4%20%7C%20F7%20%7C%20G4%20%7C%20L4-00205B?logo=stmicroelectronics&style=for-the-badge" alt="STM32" />
   <img src="https://img.shields.io/badge/Web%20Serial-Chromium%20PWA-green?logo=googlechrome&style=for-the-badge" alt="Web Serial" />
-  <img src="https://img.shields.io/badge/Build%20Status-All%209%20Passing-success?style=for-the-badge" alt="Build Status" />
+  <img src="https://img.shields.io/badge/Build%20Status-All%2010%20Passing-success?style=for-the-badge" alt="Build Status" />
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 > **Foundational Base Project (Not a Turnkey Commercial End-Product):**  
 > While the codebase is engineered with **robust, production-grade C++17 design patterns** (Dependency Injection, strict Hardware Abstraction, non-blocking state machine, and automatic fault-tolerance), the project itself is intended as a **reference base template and learning sandbox**—not a finished commercial product. Use it as a solid launchpad to understand, customize, and expand into your own specialized hardware solutions.
 
-A single codebase compiles out-of-the-box for **9 distinct microcontroller targets** spanning the **Espressif ESP32** and **STMicroelectronics STM32** families:
+A single codebase compiles out-of-the-box for **10 distinct microcontroller targets** spanning the **Espressif ESP32** and **STMicroelectronics STM32** families:
 
 - **Chromium Web Serial Interface:** Bi-directional sync with the live hosted Attendly testing PWA ([serial-attendance-pwa.vercel.app](https://serial-attendance-pwa.vercel.app/)) over native USB CDC or hardware UART at **115200 baud (8N1)**.
 - **Dual-Mode Persistence:** LittleFS flash storage on ESP32, and MicroSD card SPI storage with transparent in-RAM volatile fallback on STM32.
@@ -51,9 +51,10 @@ A single codebase compiles out-of-the-box for **9 distinct microcontroller targe
    - [5.1 STM32F401 / F411 (WeAct Black Pill V3.0)](#51-stm32f401--f411-weact-black-pill-v30)
    - [5.2 STM32F446RE (ST Nucleo-64)](#52-stm32f446re-st-nucleo-64)
    - [5.3 STM32G474RE (ST Nucleo-64 Modern)](#53-stm32g474re-st-nucleo-64-modern)
-   - [5.4 STM32L476RG (ST Nucleo-64 Ultra-Low Power)](#54-stm32l476rg-st-nucleo-64-ultra-low-power)
-   - [5.5 STM32F746ZG (ST Nucleo-144 High-End)](#55-stm32f746zg-st-nucleo-144-high-end)
-   - [5.6 STM32F103C8 / CB (Blue Pill 128K)](#56-stm32f103c8--cb-blue-pill-128k)
+   - [5.4 STM32G491RE (ST Nucleo-64 Access Line)](#54-stm32g491re-st-nucleo-64-access-line)
+   - [5.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)](#55-stm32l476rg-st-nucleo-64-ultra-low-power)
+   - [5.6 STM32F746ZG (ST Nucleo-144 High-End)](#56-stm32f746zg-st-nucleo-144-high-end)
+   - [5.7 STM32F103C8 / CB (Blue Pill 128K)](#57-stm32f103c8--cb-blue-pill-128k)
 6. [🔌 Web Serial CLI & PWA Integration](#6-web-serial-cli--pwa-integration)
 7. [🏗️ Software Architecture & Dependency Injection](#7-software-architecture--dependency-injection)
 8. [❓ Troubleshooting & FAQ](#8-troubleshooting--faq)
@@ -130,6 +131,7 @@ All 9 configurations are pre-defined in [`hardware/firmware/platformio.ini`](fil
 | `stm32_blackpill` | **WeAct BlackPill V3.0 (F401CE)** | ARM Cortex-M4 + FPU | 84 MHz | **17.9%** (93.8 KB / 524.2 KB) | **7.8%** (7.6 KB / 98.3 KB) | ✅ **SUCCESS (0 errors)** |
 | `stm32_nucleo_f446re`| **ST Nucleo-F446RE** | ARM Cortex-M4 + FPU | 180 MHz | **16.6%** (86.9 KB / 524.2 KB) | **3.2%** (4.2 KB / 131.0 KB) | ✅ **SUCCESS (0 errors)** |
 | `stm32_nucleo_g474re`| **ST Nucleo-G474RE** | ARM Cortex-M4 + FPU | 170 MHz | **17.8%** (93.2 KB / 524.2 KB) | **3.4%** (4.4 KB / 131.0 KB) | ✅ **SUCCESS (0 errors)** |
+| `stm32_nucleo_g491re`| **ST Nucleo-G491RE** | ARM Cortex-M4 + FPU | 170 MHz | **17.7%** (92.7 KB / 524.2 KB) | **3.8%** (4.4 KB / 114.7 KB) | ✅ **SUCCESS (0 errors)** |
 | `stm32_nucleo_l476rg`| **ST Nucleo-L476RG (ULP)** | ARM Cortex-M4 + FPU | 80 MHz | **8.7%** (91.4 KB / 1.04 MB) | **4.5%** (4.4 KB / 98.3 KB) | ✅ **SUCCESS (0 errors)** |
 | `stm32_nucleo_f746zg`| **ST Nucleo-144 (F746ZG)** | ARM Cortex-M7 + DP-FPU | 216 MHz | **8.8%** (91.5 KB / 1.04 MB) | **1.3%** (4.4 KB / 327.6 KB) | ✅ **SUCCESS (0 errors)** |
 | `stm32_bluepill` | **STM32F103C8 / CB Blue Pill** | ARM Cortex-M3 | 72 MHz | **64.0%** (83.9 KB / 131.1 KB) | **20.2%** (4.1 KB / 20.5 KB) | ✅ **SUCCESS (0 errors)** |
@@ -329,7 +331,32 @@ pio run -e stm32_nucleo_g474re -t upload
 
 ---
 
-### 5.4 STM32L476RG (ST Nucleo-64 Ultra-Low Power)
+### 5.4 STM32G491RE (ST Nucleo-64 Access Line)
+
+```
+Target Flag:      pio run -e stm32_nucleo_g491re -t upload
+Architecture:     ARM Cortex-M4 with FPU @ 170 MHz
+Validation:       ✅ Flash: 17.7% (92.7 KB) | RAM: 3.8% (4.4 KB)
+Features:         ST-LINK/V3E + Low power run mode + High analog integration
+```
+
+> [!NOTE]
+> **Toolchain Note:** The upstream PlatformIO `ststm32` platform definition for `nucleo_g491re` omits Arduino framework support by default. A pre-configured project board definition is included in `hardware/firmware/boards/nucleo_g491re.json` which maps the official STM32 Arduino core variant `STM32G4xx/G491RC(I-T)_G491RE(I-T-Y)x(Z)_G4A1RE(I-T-Y)` with zero code modifications needed.
+
+#### Hardware Pin Connections:
+* **OLED:** `PB6` (SCL), `PB7` (SDA)
+* **PN532 RFID:** `PA5` (SCK), `PA6` (MISO), `PA7` (MOSI), `PB0` (CS), `PB1` (RST)
+* **MicroSD:** `PA4` (CS)
+* **Feedback:** `PA1` (Green LED), `PA2` (Red LED), `PB8` (Buzzer)
+
+#### How to Flash:
+```bash
+pio run -e stm32_nucleo_g491re -t upload
+```
+
+---
+
+### 5.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_l476rg -t upload
@@ -345,7 +372,7 @@ pio run -e stm32_nucleo_l476rg -t upload
 
 ---
 
-### 5.5 STM32F746ZG (ST Nucleo-144 High-End)
+### 5.6 STM32F746ZG (ST Nucleo-144 High-End)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_f746zg -t upload
@@ -367,7 +394,7 @@ pio run -e stm32_nucleo_f746zg -t upload
 
 ---
 
-### 5.6 STM32F103C8 / CB (Blue Pill 128K)
+### 5.7 STM32F103C8 / CB (Blue Pill 128K)
 
 ```
 Target Flag:      pio run -e stm32_bluepill -t upload

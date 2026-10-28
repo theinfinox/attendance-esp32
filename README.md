@@ -278,7 +278,27 @@ Before plugging in any physical microcontroller, verify that your development en
 
 ---
 
-## 2. ⚡ 1-Minute Quick Start
+## 2. 🤖 Autonomous AI Agent Quick-Start (`agent-instruction.md`)
+
+If you are using an **AI coding assistant inside VS Code** (such as Antigravity, Cursor, Claude Code, Cline, or GitHub Copilot):
+
+1. **Plug your microcontroller into any USB port** on your computer.
+2. **Open your AI Agent chat panel** in VS Code.
+3. **Reference or paste [`agent-instruction.md`](agent-instruction.md)** into the chat, adding a single prompt specifying your board.  
+   *Example Prompt:*
+   > *"Set up prerequisites, verify my environment, and flash this project onto my connected **Nucleo G491RE** board following `agent-instruction.md`."*
+
+The AI agent will autonomously:
+* 🔍 **Auto-discover the USB port** and identify your microcontroller.
+* ⚙️ **Verify and auto-heal host prerequisites** (Git longpaths, Python 3.10+, PlatformIO Core CLI).
+* 🛡️ **Check USB drivers & OS permissions** (CH340/CP210x/STSW-LINK009/Zadig WinUSB/udev rules).
+* 🧪 **Perform an automated compilation viability check** on your board's target.
+* ⚡ **Flash the firmware** (guiding you through bootloader button sequences if needed).
+* 🌐 **Hand over testing** directly to the live Web Serial PWA at [serial-attendance-pwa.vercel.app](https://serial-attendance-pwa.vercel.app/).
+
+---
+
+## 3. ⚡ 1-Minute Manual Quick Start
 
 ```bash
 # 1. Clone the repository
@@ -299,7 +319,7 @@ pio run -e <target_name> -t upload
 
 ---
 
-## 3. 📊 Master Verification & Resource Usage Matrix
+## 4. 📊 Master Verification & Resource Usage Matrix
 
 All 9 configurations are pre-defined in [`hardware/firmware/platformio.ini`](file:///c:/Users/1sree/Documents/attendance-esp32/hardware/firmware/platformio.ini) and verified via automated build pipelines.
 
@@ -318,7 +338,7 @@ All 9 configurations are pre-defined in [`hardware/firmware/platformio.ini`](fil
 
 ---
 
-## 4. 🟦 ESP32 Family Modular Guides
+## 5. 🟦 ESP32 Family Modular Guides
 
 ### 4.1 ESP32 Classic (WROVER-E / WROOM / DevKit)
 
@@ -413,13 +433,13 @@ Features:         Open RISC-V Standard + Integrated USB Serial/JTAG + Low Power
 
 ---
 
-## 5. 🟪 STM32 Family Modular Guides
+## 6. 🟪 STM32 Family Modular Guides
 
 All STM32 boards run in **Dedicated High-Speed USB Serial Mode (115200 8N1)** with **MicroSD SPI persistent storage** and automatic **Volatile In-RAM Fallback**.
 
 ---
 
-### 5.1 STM32F401 / F411 (WeAct Black Pill V3.0)
+### 6.1 STM32F401 / F411 (WeAct Black Pill V3.0)
 
 ```
 Target Flag:      pio run -e stm32_blackpill -t upload
@@ -458,7 +478,7 @@ Features:         Pocket form factor, direct USB-C DFU and CDC
 
 ---
 
-### 5.2 STM32F446RE (ST Nucleo-64)
+### 6.2 STM32F446RE (ST Nucleo-64)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_f446re -t upload
@@ -489,7 +509,7 @@ Features:         Integrated ST-LINK v2.1 with Hardware Virtual COM Port on USAR
 
 ---
 
-### 5.3 STM32G474RE (ST Nucleo-64 Modern)
+### 6.3 STM32G474RE (ST Nucleo-64 Modern)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_g474re -t upload
@@ -511,7 +531,7 @@ pio run -e stm32_nucleo_g474re -t upload
 
 ---
 
-### 5.4 STM32G491RE (ST Nucleo-64 Access Line)
+### 6.4 STM32G491RE (ST Nucleo-64 Access Line)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_g491re -t upload
@@ -536,7 +556,7 @@ pio run -e stm32_nucleo_g491re -t upload
 
 ---
 
-### 5.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)
+### 6.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_l476rg -t upload
@@ -552,7 +572,7 @@ pio run -e stm32_nucleo_l476rg -t upload
 
 ---
 
-### 5.6 STM32F746ZG (ST Nucleo-144 High-End)
+### 6.6 STM32F746ZG (ST Nucleo-144 High-End)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_f746zg -t upload
@@ -574,7 +594,7 @@ pio run -e stm32_nucleo_f746zg -t upload
 
 ---
 
-### 5.7 STM32F103C8 / CB (Blue Pill 128K)
+### 6.7 STM32F103C8 / CB (Blue Pill 128K)
 
 ```
 Target Flag:      pio run -e stm32_bluepill -t upload
@@ -608,7 +628,7 @@ Features:         Ubiquitous low-cost standard, supported via 128KB flash alloca
 
 ---
 
-## 6. 🔌 Web Serial CLI & PWA Integration
+## 7. 🔌 Web Serial CLI & PWA Integration
 
 The Attendly PWA connects directly to the terminal using the **W3C Web Serial API** in Chromium browsers (Chrome, Edge, Opera, Brave).
 
@@ -641,7 +661,7 @@ You can test the terminal via the Attendly Web Serial console or any terminal em
 
 ---
 
-## 7. 🏗️ Software Architecture & Dependency Injection
+## 8. 🏗️ Software Architecture & Dependency Injection
 
 The firmware is structured into modular layers adhering to clean SOLID architecture principles:
 
@@ -669,7 +689,7 @@ The firmware is structured into modular layers adhering to clean SOLID architect
 
 ---
 
-## 8. ❓ Troubleshooting & FAQ
+## 9. ❓ Troubleshooting & FAQ
 
 #### Q: PlatformIO reports `Access is denied` or `Could not open port COMx`
 * **Cause:** The Attendly PWA or a serial monitor is actively connected to the COM port.

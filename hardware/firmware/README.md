@@ -45,23 +45,24 @@ A single codebase compiles out-of-the-box for **10 distinct microcontroller targ
    - [1.6 Phase 6: First Verification Smoke Test](#16-phase-6-first-verification-smoke-test)
    - [1.7 Serial Port Isolation Rules (Avoid Access Denied)](#17-serial-port-isolation-rules-avoid-access-denied)
    - [1.8 Electrical & Logic Level Safety Rules](#18-electrical--logic-level-safety-rules)
-2. [⚡ 1-Minute Quick Start](#2-1-minute-quick-start)
-3. [📊 Master Verification & Resource Usage Matrix](#3-master-verification--resource-usage-matrix)
-4. [🟦 ESP32 Family Modular Guides](#4-esp32-family-modular-guides)
-   - [4.1 ESP32 Classic (DevKit / WROVER / WROOM)](#41-esp32-classic-wrover-e--wroom--devkit)
-   - [4.2 ESP32-S3 (DevKitC-1 / XIAO S3)](#42-esp32-s3-devkitc-1--xiao-s3)
-   - [4.3 ESP32-C3 (DevKitM-1 / XIAO C3 RISC-V)](#43-esp32-c3-devkitm-1--xiao-c3-risc-v)
-5. [🟪 STM32 Family Modular Guides](#5-stm32-family-modular-guides)
-   - [5.1 STM32F401 / F411 (WeAct Black Pill V3.0)](#51-stm32f401--f411-weact-black-pill-v30)
-   - [5.2 STM32F446RE (ST Nucleo-64)](#52-stm32f446re-st-nucleo-64)
-   - [5.3 STM32G474RE (ST Nucleo-64 Modern)](#53-stm32g474re-st-nucleo-64-modern)
-   - [5.4 STM32G491RE (ST Nucleo-64 Access Line)](#54-stm32g491re-st-nucleo-64-access-line)
-   - [5.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)](#55-stm32l476rg-st-nucleo-64-ultra-low-power)
-   - [5.6 STM32F746ZG (ST Nucleo-144 High-End)](#56-stm32f746zg-st-nucleo-144-high-end)
-   - [5.7 STM32F103C8 / CB (Blue Pill 128K)](#57-stm32f103c8--cb-blue-pill-128k)
-6. [🔌 Web Serial CLI & PWA Integration](#6-web-serial-cli--pwa-integration)
-7. [🏗️ Software Architecture & Dependency Injection](#7-software-architecture--dependency-injection)
-8. [❓ Troubleshooting & FAQ](#8-troubleshooting--faq)
+2. [🤖 Autonomous AI Agent Quick-Start (`agent-instruction.md`)](#2--autonomous-ai-agent-quick-start-agent-instructionmd)
+3. [⚡ 1-Minute Manual Quick Start](#3-⚡-1-minute-manual-quick-start)
+4. [📊 Master Verification & Resource Usage Matrix](#4-master-verification--resource-usage-matrix)
+5. [🟦 ESP32 Family Modular Guides](#5-esp32-family-modular-guides)
+   - [5.1 ESP32 Classic (DevKit / WROVER / WROOM)](#51-esp32-classic-wrover-e--wroom--devkit)
+   - [5.2 ESP32-S3 (DevKitC-1 / XIAO S3)](#52-esp32-s3-devkitc-1--xiao-s3)
+   - [5.3 ESP32-C3 (DevKitM-1 / XIAO C3 RISC-V)](#53-esp32-c3-devkitm-1--xiao-c3-risc-v)
+6. [🟪 STM32 Family Modular Guides](#6-stm32-family-modular-guides)
+   - [6.1 STM32F401 / F411 (WeAct Black Pill V3.0)](#61-stm32f401--f411-weact-black-pill-v30)
+   - [6.2 STM32F446RE (ST Nucleo-64)](#62-stm32f446re-st-nucleo-64)
+   - [6.3 STM32G474RE (ST Nucleo-64 Modern)](#63-stm32g474re-st-nucleo-64-modern)
+   - [6.4 STM32G491RE (ST Nucleo-64 Access Line)](#64-stm32g491re-st-nucleo-64-access-line)
+   - [6.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)](#65-stm32l476rg-st-nucleo-64-ultra-low-power)
+   - [6.6 STM32F746ZG (ST Nucleo-144 High-End)](#66-stm32f746zg-st-nucleo-144-high-end)
+   - [6.7 STM32F103C8 / CB (Blue Pill 128K)](#67-stm32f103c8--cb-blue-pill-128k)
+7. [🔌 Web Serial CLI & PWA Integration](#7-web-serial-cli--pwa-integration)
+8. [🏗️ Software Architecture & Dependency Injection](#8-software-architecture--dependency-injection)
+9. [❓ Troubleshooting & FAQ](#9-troubleshooting--faq)
 
 ---
 
@@ -277,7 +278,27 @@ Before plugging in any physical microcontroller, verify that your development en
 
 ---
 
-## 2. ⚡ 1-Minute Quick Start
+## 2. 🤖 Autonomous AI Agent Quick-Start (`agent-instruction.md`)
+
+If you are using an **AI coding assistant inside VS Code** (such as Antigravity, Cursor, Claude Code, Cline, or GitHub Copilot):
+
+1. **Plug your microcontroller into any USB port** on your computer.
+2. **Open your AI Agent chat panel** in VS Code.
+3. **Reference or paste [`agent-instruction.md`](agent-instruction.md)** into the chat, adding a single prompt specifying your board.  
+   *Example Prompt:*
+   > *"Set up prerequisites, verify my environment, and flash this project onto my connected **Nucleo G491RE** board following `agent-instruction.md`."*
+
+The AI agent will autonomously:
+* 🔍 **Auto-discover the USB port** and identify your microcontroller.
+* ⚙️ **Verify and auto-heal host prerequisites** (Git longpaths, Python 3.10+, PlatformIO Core CLI).
+* 🛡️ **Check USB drivers & OS permissions** (CH340/CP210x/STSW-LINK009/Zadig WinUSB/udev rules).
+* 🧪 **Perform an automated compilation viability check** on your board's target.
+* ⚡ **Flash the firmware** (guiding you through bootloader button sequences if needed).
+* 🌐 **Hand over testing** directly to the live Web Serial PWA at [serial-attendance-pwa.vercel.app](https://serial-attendance-pwa.vercel.app/).
+
+---
+
+## 3. ⚡ 1-Minute Manual Quick Start
 
 ```bash
 # 1. Clone the repository
@@ -298,7 +319,7 @@ pio run -e <target_name> -t upload
 
 ---
 
-## 3. 📊 Master Verification & Resource Usage Matrix
+## 4. 📊 Master Verification & Resource Usage Matrix
 
 All 9 configurations are pre-defined in [`hardware/firmware/platformio.ini`](file:///c:/Users/1sree/Documents/attendance-esp32/hardware/firmware/platformio.ini) and verified via automated build pipelines.
 
@@ -317,7 +338,7 @@ All 9 configurations are pre-defined in [`hardware/firmware/platformio.ini`](fil
 
 ---
 
-## 4. 🟦 ESP32 Family Modular Guides
+## 5. 🟦 ESP32 Family Modular Guides
 
 ### 4.1 ESP32 Classic (WROVER-E / WROOM / DevKit)
 
@@ -412,13 +433,13 @@ Features:         Open RISC-V Standard + Integrated USB Serial/JTAG + Low Power
 
 ---
 
-## 5. 🟪 STM32 Family Modular Guides
+## 6. 🟪 STM32 Family Modular Guides
 
 All STM32 boards run in **Dedicated High-Speed USB Serial Mode (115200 8N1)** with **MicroSD SPI persistent storage** and automatic **Volatile In-RAM Fallback**.
 
 ---
 
-### 5.1 STM32F401 / F411 (WeAct Black Pill V3.0)
+### 6.1 STM32F401 / F411 (WeAct Black Pill V3.0)
 
 ```
 Target Flag:      pio run -e stm32_blackpill -t upload
@@ -457,7 +478,7 @@ Features:         Pocket form factor, direct USB-C DFU and CDC
 
 ---
 
-### 5.2 STM32F446RE (ST Nucleo-64)
+### 6.2 STM32F446RE (ST Nucleo-64)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_f446re -t upload
@@ -488,7 +509,7 @@ Features:         Integrated ST-LINK v2.1 with Hardware Virtual COM Port on USAR
 
 ---
 
-### 5.3 STM32G474RE (ST Nucleo-64 Modern)
+### 6.3 STM32G474RE (ST Nucleo-64 Modern)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_g474re -t upload
@@ -510,7 +531,7 @@ pio run -e stm32_nucleo_g474re -t upload
 
 ---
 
-### 5.4 STM32G491RE (ST Nucleo-64 Access Line)
+### 6.4 STM32G491RE (ST Nucleo-64 Access Line)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_g491re -t upload
@@ -535,7 +556,7 @@ pio run -e stm32_nucleo_g491re -t upload
 
 ---
 
-### 5.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)
+### 6.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_l476rg -t upload
@@ -551,7 +572,7 @@ pio run -e stm32_nucleo_l476rg -t upload
 
 ---
 
-### 5.6 STM32F746ZG (ST Nucleo-144 High-End)
+### 6.6 STM32F746ZG (ST Nucleo-144 High-End)
 
 ```
 Target Flag:      pio run -e stm32_nucleo_f746zg -t upload
@@ -573,7 +594,7 @@ pio run -e stm32_nucleo_f746zg -t upload
 
 ---
 
-### 5.7 STM32F103C8 / CB (Blue Pill 128K)
+### 6.7 STM32F103C8 / CB (Blue Pill 128K)
 
 ```
 Target Flag:      pio run -e stm32_bluepill -t upload
@@ -607,7 +628,7 @@ Features:         Ubiquitous low-cost standard, supported via 128KB flash alloca
 
 ---
 
-## 6. 🔌 Web Serial CLI & PWA Integration
+## 7. 🔌 Web Serial CLI & PWA Integration
 
 The Attendly PWA connects directly to the terminal using the **W3C Web Serial API** in Chromium browsers (Chrome, Edge, Opera, Brave).
 
@@ -640,7 +661,7 @@ You can test the terminal via the Attendly Web Serial console or any terminal em
 
 ---
 
-## 7. 🏗️ Software Architecture & Dependency Injection
+## 8. 🏗️ Software Architecture & Dependency Injection
 
 The firmware is structured into modular layers adhering to clean SOLID architecture principles:
 
@@ -668,7 +689,7 @@ The firmware is structured into modular layers adhering to clean SOLID architect
 
 ---
 
-## 8. ❓ Troubleshooting & FAQ
+## 9. ❓ Troubleshooting & FAQ
 
 #### Q: PlatformIO reports `Access is denied` or `Could not open port COMx`
 * **Cause:** The Attendly PWA or a serial monitor is actively connected to the COM port.

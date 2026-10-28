@@ -251,3 +251,4 @@ User says: "Flash my board" + provides Board Name
    │     └─► Bootloader error -> Prompt user with button sequences (BOOT/RST)
    └─► 5. Hand over to https://serial-attendance-pwa.vercel.app/
 ```
+

@@ -36,7 +36,7 @@ A single codebase compiles out-of-the-box for **10 distinct microcontroller targ
 
 ## 📑 Table of Contents
 
-1. [🛠️ Fresh PC Setup & Pre-Flashing Guide](#1-fresh-pc-setup--pre-flashing-guide)
+1. [🛠️ Fresh PC Setup & Pre-Flashing Guide](#1--fresh-pc-setup--pre-flashing-guide)
    - [1.1 Phase 1: Foundational Prerequisites (Git, Python, VS Code)](#11-phase-1-foundational-prerequisites)
    - [1.2 Phase 2: PlatformIO IDE Extension Setup in VS Code](#12-phase-2-platformio-ide-extension-setup-in-vs-code)
    - [1.3 Phase 3: Opening the Project Correctly (Avoiding the Directory Trap)](#13-phase-3-opening-the-project-correctly-avoiding-the-directory-trap)
@@ -46,13 +46,13 @@ A single codebase compiles out-of-the-box for **10 distinct microcontroller targ
    - [1.7 Serial Port Isolation Rules (Avoid Access Denied)](#17-serial-port-isolation-rules-avoid-access-denied)
    - [1.8 Electrical & Logic Level Safety Rules](#18-electrical--logic-level-safety-rules)
 2. [🤖 Autonomous AI Agent Quick-Start (`agent-instruction.md`)](#2--autonomous-ai-agent-quick-start-agent-instructionmd)
-3. [⚡ 1-Minute Manual Quick Start](#3-⚡-1-minute-manual-quick-start)
-4. [📊 Master Verification & Resource Usage Matrix](#4-master-verification--resource-usage-matrix)
-5. [🟦 ESP32 Family Modular Guides](#5-esp32-family-modular-guides)
-   - [5.1 ESP32 Classic (DevKit / WROVER / WROOM)](#51-esp32-classic-wrover-e--wroom--devkit)
+3. [⚡ 1-Minute Manual Quick Start](#3--1-minute-manual-quick-start)
+4. [📊 Master Verification & Resource Usage Matrix](#4--master-verification--resource-usage-matrix)
+5. [🟦 ESP32 Family Modular Guides](#5--esp32-family-modular-guides)
+   - [5.1 ESP32 Classic (DevKit / WROVER / WROOM)](#51-esp32-classic-devkit--wrover--wroom)
    - [5.2 ESP32-S3 (DevKitC-1 / XIAO S3)](#52-esp32-s3-devkitc-1--xiao-s3)
    - [5.3 ESP32-C3 (DevKitM-1 / XIAO C3 RISC-V)](#53-esp32-c3-devkitm-1--xiao-c3-risc-v)
-6. [🟪 STM32 Family Modular Guides](#6-stm32-family-modular-guides)
+6. [🟪 STM32 Family Modular Guides](#6--stm32-family-modular-guides)
    - [6.1 STM32F401 / F411 (WeAct Black Pill V3.0)](#61-stm32f401--f411-weact-black-pill-v30)
    - [6.2 STM32F446RE (ST Nucleo-64)](#62-stm32f446re-st-nucleo-64)
    - [6.3 STM32G474RE (ST Nucleo-64 Modern)](#63-stm32g474re-st-nucleo-64-modern)
@@ -60,9 +60,9 @@ A single codebase compiles out-of-the-box for **10 distinct microcontroller targ
    - [6.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)](#65-stm32l476rg-st-nucleo-64-ultra-low-power)
    - [6.6 STM32F746ZG (ST Nucleo-144 High-End)](#66-stm32f746zg-st-nucleo-144-high-end)
    - [6.7 STM32F103C8 / CB (Blue Pill 128K)](#67-stm32f103c8--cb-blue-pill-128k)
-7. [🔌 Web Serial CLI & PWA Integration](#7-web-serial-cli--pwa-integration)
-8. [🏗️ Software Architecture & Dependency Injection](#8-software-architecture--dependency-injection)
-9. [❓ Troubleshooting & FAQ](#9-troubleshooting--faq)
+7. [🔌 Web Serial CLI & PWA Integration](#7--web-serial-cli--pwa-integration)
+8. [🏗️ Software Architecture & Dependency Injection](#8--software-architecture--dependency-injection)
+9. [❓ Troubleshooting & FAQ](#9--troubleshooting--faq)
 
 ---
 
@@ -340,7 +340,7 @@ All 9 configurations are pre-defined in [`hardware/firmware/platformio.ini`](fil
 
 ## 5. 🟦 ESP32 Family Modular Guides
 
-### 4.1 ESP32 Classic (WROVER-E / WROOM / DevKit)
+### 5.1 ESP32 Classic (DevKit / WROVER / WROOM)
 
 ```
 Target Flag:      pio run -e esp32dev -t upload
@@ -375,7 +375,7 @@ Features:         Wi-Fi HTTP Dashboard (:80) + LittleFS Flash Storage + Web Seri
 
 ---
 
-### 4.2 ESP32-S3 (DevKitC-1 / XIAO S3)
+### 5.2 ESP32-S3 (DevKitC-1 / XIAO S3)
 
 ```
 Target Flag:      pio run -e esp32_s3 -t upload
@@ -404,7 +404,7 @@ Features:         Native On-Chip USB CDC (Direct Browser Web Serial) + High Spee
 
 ---
 
-### 4.3 ESP32-C3 (DevKitM-1 / XIAO C3 RISC-V)
+### 5.3 ESP32-C3 (DevKitM-1 / XIAO C3 RISC-V)
 
 ```
 Target Flag:      pio run -e esp32_c3 -t upload

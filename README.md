@@ -554,6 +554,10 @@ Features:         ST-LINK/V3E + Low power run mode + High analog integration
 pio run -e stm32_nucleo_g491re -t upload
 ```
 
+> 🎓 **Academic Presentation & Viva Defense Guide:**  
+> A complete presentation guide with Mermaid flowcharts, architectural deep-dives, and 10 examiner viva Q&As tailored for undergraduate evaluations is available in:  
+> **👉 [`NUCLEO_G491RE_PRESENTATION.md`](NUCLEO_G491RE_PRESENTATION.md)**
+
 ---
 
 ### 6.5 STM32L476RG (ST Nucleo-64 Ultra-Low Power)

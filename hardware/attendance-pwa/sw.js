@@ -1,4 +1,4 @@
-const VERSION = "13.9";
+const VERSION = "14.0";
 const CACHE_NAME = `attendance-manager-v${VERSION}`;
 const APP_SHELL = [
   "./", "./index.html", "./manifest.json", "./css/main.css", "./css/layout.css", "./css/components.css", "./css/animations.css",

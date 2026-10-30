@@ -11,6 +11,10 @@
 #define LOGS_FILE  "/queue.jsonl"
 
 void STM32AttendanceRepository::init() {
+    // 1. Explicitly isolate MicroSD CS pin to prevent shared SPI1 bus contention
+    pinMode(PIN_SD_CS, OUTPUT);
+    digitalWrite(PIN_SD_CS, HIGH);
+
     _hasSD = SD.begin(PIN_SD_CS);
     if (_hasSD) {
         LOG_INFO("STM32: SD Card initialized successfully.");
@@ -21,8 +25,10 @@ void STM32AttendanceRepository::init() {
             writeFile(LOGS_FILE, "");
         }
     } else {
+        // Guarantee CS remains driven HIGH so it never clamps SPI1 MOSI/MISO/SCK
+        digitalWrite(PIN_SD_CS, HIGH);
         LOG_WARN("STM32: SD Card not found or failed to mount on CS pin %d.", PIN_SD_CS);
-        LOG_WARN("STM32: Operating in volatile in-RAM repository mode.");
+        LOG_WARN("STM32: Operating in volatile in-RAM repository mode (SPI1 isolated).");
         _ramUsersJson = "{}";
         _ramLogsJsonl = "";
     }

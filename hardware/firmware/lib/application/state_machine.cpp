@@ -56,7 +56,8 @@ bool StateMachine::isValidTransition(SystemState from, SystemState to) const {
             return to == SystemState::INIT;
 
         case SystemState::INIT:
-            return to == SystemState::WIFI_CONNECTING;
+            return to == SystemState::WIFI_CONNECTING
+                || to == SystemState::READY;
 
         case SystemState::WIFI_CONNECTING:
             return to == SystemState::BACKEND_CONNECTING

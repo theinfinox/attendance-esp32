@@ -14,7 +14,7 @@ constexpr int PIN_RFID_MISO = PA6;  // SPI1 MISO
 constexpr int PIN_RFID_MOSI = PA7;  // SPI1 MOSI
 #endif
 #ifndef PIN_RFID_SDA
-constexpr int PIN_RFID_SDA  = PB0;  // SPI1 Slave Select (SS / CS)
+constexpr int PIN_RFID_SDA  = PB6;  // SPI1 Slave Select (SS / CS on D10)
 #endif
 #ifndef PIN_RFID_RST
 constexpr int PIN_RFID_RST  = PB1;  // Reset
@@ -25,12 +25,12 @@ constexpr int PIN_RFID_RST  = PB1;  // Reset
 constexpr int PIN_SD_CS     = PA4;  // Chip Select for SD card SPI
 #endif
 
-// --- OLED Display (SSD1306 — I2C1) ---
+// --- OLED Display (SSD1306 — I2C1 / Wire defaults) ---
 #ifndef PIN_OLED_SCL
-constexpr int PIN_OLED_SCL  = PB6;  // I2C1 SCL
+constexpr int PIN_OLED_SCL  = PA9;  // I2C SCL (D8 on CN5)
 #endif
 #ifndef PIN_OLED_SDA
-constexpr int PIN_OLED_SDA  = PB7;  // I2C1 SDA
+constexpr int PIN_OLED_SDA  = PA8;  // I2C SDA (D7 on CN9)
 #endif
 
 // --- Indicators ---

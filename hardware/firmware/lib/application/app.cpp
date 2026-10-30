@@ -229,7 +229,8 @@ void App::handleReady() {
 #if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
         _display->showReady(_wifi.ip(), _wifi.rssi(), currentTimeStr);
 #else
-        _display->showReady("Serial Mode", 0, currentTimeStr);
+        String rfidStatus = (_rfid->ready() && !_rfid->isSimulated()) ? "PN532 Online" : "RFID: Offline/Sim";
+        _display->showReady(rfidStatus, 0, currentTimeStr);
 #endif
         if (_sm.stateChanged()) {
             _led->allOff();
@@ -267,7 +268,8 @@ void App::handleReady() {
 #if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
         _display->showReady(_wifi.ip(), _wifi.rssi(), getFormattedTime());
 #else
-        _display->showReady("Serial Mode", 0, getFormattedTime());
+        String rfidStatus = (_rfid->ready() && !_rfid->isSimulated()) ? "PN532 Online" : "RFID: Offline/Sim";
+        _display->showReady(rfidStatus, 0, getFormattedTime());
 #endif
     }
 }

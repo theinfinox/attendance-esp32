@@ -8,7 +8,7 @@
 constexpr bool CFG_DEBUG_MODE       = true; // True: Mock API, verbose logs, Serial simulation. False: Strict production.
 constexpr bool CFG_STANDALONE_MODE  = true; // True: Embedded backend via LittleFS/WebServer. False: Cloud backend.
 // --- UI Settings ---
-constexpr bool CFG_SHOW_UID_ON_DETECT = false; // If true, shows the UID on the 'Card Detected' processing screen
+constexpr bool CFG_SHOW_UID_ON_DETECT = true;  // If true, shows the UID on the 'Card Detected' processing screen
 
 // --- Time / NTP ---
 constexpr long CFG_TIMEZONE_OFFSET  = 19800; // GMT+5:30 in seconds (India)

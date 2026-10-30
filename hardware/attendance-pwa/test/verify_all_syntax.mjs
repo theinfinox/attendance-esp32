@@ -35,3 +35,4 @@ if (!allValid) {
   process.exit(1);
 }
 console.log('\nAll PWA JavaScript files passed syntax verification!');
+

@@ -152,6 +152,7 @@ function bind() {
       setPage("logs");
       render();
     }));
+  }
   if (page === "users") bindUsers(content, { render, refresh:users, add:addUser, remove:removeUser, fetchLast: () => state.get().lastScannedUid, export:() => download("attendance-users.json", JSON.stringify(app.users, null, 2)) });
   if (page === "logs") bindLogs(content, { render, refresh:logs, clear, exportJson:() => download("attendance-logs.json", JSON.stringify(app.logs, null, 2)), exportCsv:() => download("attendance-logs.csv", csv(app.logs), "text/csv;charset=utf-8") });
   if (page === "console") bindConsole(content, raw);

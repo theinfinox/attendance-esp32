@@ -373,7 +373,7 @@ After a serial connection succeeds, \`app.js\` starts an automatic sequence:
 
 The initial time-sync request is important for the STM32 firmware because its epoch base is RAM-held and must be supplied again after a reset or power cycle. The frontend calculates the timezone offset in minutes using the browser's local timezone.
 
-Auto-sync is sequential. If one awaited operation fails, the surrounding auto-sync block logs a warning and stops the remaining sequence. In particular, a user-list protocol failure can prevent the initial log dump from being requested.
+Auto-sync is sequential. If one awaited operation fails, the surrounding auto-sync block logs a warning and stops the remaining sequence. With the current G491 firmware, the user map is emitted as one compact JSON line, which the protocol adapter parses directly; the BEGIN/END marker lines are treated as console diagnostics.
 
 ### Commands exposed by the current G491 CLI
 
@@ -453,22 +453,22 @@ The live message currently does not include \`event_id\` or \`date\`, whereas th
 
 These are source-level mismatches found when comparing the current frontend with the current standalone G491 CLI. They are recorded here for developers; this document does not change either side.
 
-#### A. DUMP_USERS framing is incompatible with the current multiline parser
+#### A. DUMP_USERS framing and multiline compatibility
 
 The G491 CLI currently prints:
 
-\`\`\`text
+```text
 --- BEGIN USERS ---
 {"04A1B2C3":"Example Student"}
 --- END USERS ---
 {"type":"done"}
-\`\`\`
+```
 
-The PWA requests this command with \`allowMultilineJson: true\`. Its multiline parser appends non-JSON lines to one raw buffer. The \`--- BEGIN USERS ---\` and \`--- END USERS ---\` markers are not treated as diagnostics or discarded framing; they are included in the attempted JSON document. As a result, the combined buffer is not valid JSON and the request eventually times out.
+The PWA requests this command with `allowMultilineJson: true`. The current G491 firmware emits the user mapping as a single compact JSON line between the markers. That line is parsed directly by the normal JSON-line path, so the Users refresh currently receives the UID/name mapping. The BEGIN/END marker lines are separately treated as malformed serial diagnostics and appear in the console; they do not prevent parsing of the compact JSON line.
 
-This affects manual user refresh and the connection-time auto-sync sequence. Because auto-sync awaits the user refresh before requesting logs, this failure can also prevent the initial \`DUMP_LOGS\` fetch after connection.
+The parser's multiline fallback does not strip these markers. If the firmware changes to pretty-printed multi-line JSON while retaining the plain-text BEGIN/END wrappers, those marker lines can become part of the multiline buffer and make the combined JSON invalid. In that output format, user refresh would no longer be reliable.
 
-**Integration requirement:** the frontend parser and firmware output format must agree. Either the firmware should provide a clean parseable JSON response with framing the frontend expects, or the frontend should explicitly ignore the BEGIN/END marker lines and parse only the enclosed JSON. Do not assume user refresh currently works end-to-end with this framing.
+**Integration requirement:** keep the current compact one-line JSON map, or update the frontend parser to explicitly ignore the BEGIN/END marker lines before enabling pretty-printed/multiline user JSON.
 
 #### B. CLEAR_LOGS failure is not distinguished by the UI
 

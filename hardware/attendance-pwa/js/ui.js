@@ -1,4 +1,5 @@
 import { state } from "./state.js";
+import { formatDemoBadge } from "./utils.js";
 
 const pages = { dashboard:["Dashboard v13.9", "Monitor your attendance device"], users:["Users", "Browse registered RFID users"], logs:["Attendance Logs", "Review recorded attendance events"], console:["Serial Console", "Send direct commands to the device"], settings:["Settings", "Configure your local application preferences"], about:["About", "Serial Attendance Manager"] };
 /** Display a transient feedback message. */
@@ -30,6 +31,15 @@ export function syncChrome() {
   button.disabled = app.connecting;
   button.querySelector("span:last-child").textContent = app.connecting ? "Connecting…" : live ? "Disconnect" : "Connect device";
   document.querySelector("#theme-button").textContent = app.theme === "dark" ? "☀" : "☾";
+  const demoBadge = document.querySelector("#demo-badge");
+  if (demoBadge) {
+    if (app.demoMode) {
+      demoBadge.style.display = "inline-flex";
+      demoBadge.textContent = formatDemoBadge(app.demoOffsetMs || 0);
+    } else {
+      demoBadge.style.display = "none";
+    }
+  }
 }
 /** Change the active navigation page. */
 export function setPage(page) { const [title, subtitle] = pages[page] || pages.dashboard; document.querySelector("#page-title").textContent = title; document.querySelector("#page-subtitle").textContent = subtitle; document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === page)); document.querySelector("#sidebar").classList.remove("open"); document.querySelector("#backdrop").classList.remove("visible"); }

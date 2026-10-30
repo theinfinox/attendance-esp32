@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { SerialTransport } from "./serial.js";
 import { AttendanceProtocol } from "./protocol.js";
 import { addConsoleLine, setPage, syncChrome, toast } from "./ui.js";
-import { csv, download, formatDate, getPillClass } from "./utils.js";
+import { csv, download, formatDate, getPillClass, calculateDemoOffsetMs, formatDemoOffsetSummary } from "./utils.js";
 import { renderDashboard } from "../pages/dashboard.js";
 import { bindUsers, renderUsers } from "../pages/users.js";
 import { bindLogs, renderLogs } from "../pages/logs.js";
@@ -13,7 +13,80 @@ const protocol = new AttendanceProtocol(serial);
 const content = document.querySelector("#app-content");
 let page = "dashboard";
 
-function settings(app) { return `<div class="settings-grid"><section class="card setting-row"><div><h2>Colour theme</h2><p>Use a dark interface for low-light environments.</p></div><button class="button" id="theme-setting">${app.theme === "dark" ? "Use light mode" : "Use dark mode"}</button></section><section class="card setting-row"><div><h2>Automatic console scrolling</h2><p>Keep terminal output positioned at the latest message.</p></div><input class="toggle" id="autoscroll" type="checkbox" ${app.autoScroll ? "checked" : ""}></section><section class="card setting-row"><div><h2>Serial configuration</h2><p>Fixed to 115200 baud, 8 data bits, no parity, and one stop bit.</p></div><span class="pill">Web Serial</span></section><section class="card setting-row"><div><h2>App Updates</h2><p>Force the app to bypass the cache and fetch the latest version.</p></div><button class="button primary" id="force-update">Update App</button></section></div>`; }
+function settings(app) {
+  const offsetMs = app.demoOffsetMs || 0;
+  const isNegative = offsetMs < 0;
+  const absMin = Math.round(Math.abs(offsetMs) / 60000);
+  const hours = Math.floor(absMin / 60);
+  const minutes = absMin % 60;
+
+  return `<div class="settings-grid">
+    <section class="card setting-row">
+      <div>
+        <h2>Colour theme</h2>
+        <p>Use a dark interface for low-light environments.</p>
+      </div>
+      <button class="button" id="theme-setting">${app.theme === "dark" ? "Use light mode" : "Use dark mode"}</button>
+    </section>
+
+    <section class="card setting-row">
+      <div>
+        <h2>Demo Time Mode</h2>
+        <p>Display-only presentation offset. Does not alter hardware time, storage, or exports.</p>
+      </div>
+      <input class="toggle" id="demo-toggle" type="checkbox" ${app.demoMode ? "checked" : ""}>
+    </section>
+
+    <section class="card" id="demo-settings-card" style="padding:18px; display:${app.demoMode ? 'grid' : 'none'}; gap:14px;">
+      <div>
+        <h2>Presentation Time Offset</h2>
+        <p class="muted" style="margin:4px 0 0; font-size:.83rem;">Shift displayed timestamps forward into the future or backward into the past.</p>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+        <select id="demo-direction" class="select" style="min-width:130px;">
+          <option value="+" ${!isNegative ? "selected" : ""}>+ Ahead (Future)</option>
+          <option value="-" ${isNegative ? "selected" : ""}>- Behind (Past)</option>
+        </select>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <input id="demo-hours" class="input" type="number" min="0" max="8760" value="${hours}" style="width:75px;" placeholder="Hours">
+          <span class="muted" style="font-size:.85rem;">hrs</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <input id="demo-minutes" class="input" type="number" min="0" max="59" value="${minutes}" style="width:70px;" placeholder="Mins">
+          <span class="muted" style="font-size:.85rem;">mins</span>
+        </div>
+        <button class="button danger" id="demo-reset" style="margin-left:auto;">Reset to actual time</button>
+      </div>
+      <div style="font-size:.78rem; color:var(--muted);">
+        Effective presentation shift: <strong id="demo-summary">${escapeHtml(formatDemoOffsetSummary(offsetMs))}</strong>
+      </div>
+    </section>
+
+    <section class="card setting-row">
+      <div>
+        <h2>Automatic console scrolling</h2>
+        <p>Keep terminal output positioned at the latest message.</p>
+      </div>
+      <input class="toggle" id="autoscroll" type="checkbox" ${app.autoScroll ? "checked" : ""}>
+    </section>
+
+    <section class="card setting-row">
+      <div>
+        <h2>Serial configuration</h2>
+        <p>Fixed to 115200 baud, 8 data bits, no parity, and one stop bit.</p>
+      </div>
+      <span class="pill">Web Serial</span>
+    </section>
+
+    <section class="card setting-row">
+      <div>
+        <h2>App Updates</h2>
+        <p>Force the app to bypass the cache and fetch the latest version.</p>
+      </div>
+      <button class="button primary" id="force-update">Update App</button>
+    </section>
+  </div>`;
+}
 function about() { return `<section class="card wide-card"><h2>Serial Attendance Manager</h2><p class="muted">A local-first Progressive Web App for ESP32 and STM32 attendance hardware. It communicates directly through the browser Web Serial API; no Wi-Fi, server, HTTP API, or WebSocket connection is used.</p><div class="device-details"><div><span>Transport</span><strong>USB Serial, 115200 baud</strong></div><div><span>Protocol</span><strong>Newline-delimited JSON CLI</strong></div><div><span>Installation</span><strong>Offline-capable PWA</strong></div><div><span>Browser support</span><strong>Chromium-based browsers</strong></div></div></section>`; }
 function render() { const app = state.get(); syncChrome(); const views = { dashboard:renderDashboard, users:renderUsers, logs:renderLogs, console:renderConsole, settings, about }; content.innerHTML = views[page](app); bind(); }
 function syncDashboard(app) {
@@ -79,7 +152,58 @@ function bind() {
       setPage("logs");
       render();
     }));
-  } if (page === "users") bindUsers(content, { render, refresh:users, add:addUser, remove:removeUser, fetchLast: () => state.get().lastScannedUid, export:() => download("attendance-users.json", JSON.stringify(app.users, null, 2)) }); if (page === "logs") bindLogs(content, { render, refresh:logs, clear, exportJson:() => download("attendance-logs.json", JSON.stringify(app.logs, null, 2)), exportCsv:() => download("attendance-logs.csv", csv(app.logs), "text/csv;charset=utf-8") }); if (page === "console") bindConsole(content, raw); if (page === "settings") { content.querySelector("#theme-setting").addEventListener("click", theme); content.querySelector("#autoscroll").addEventListener("change", event => state.set({ autoScroll:event.target.checked })); content.querySelector("#force-update")?.addEventListener("click", async () => { if ('serviceWorker' in navigator) { const regs = await navigator.serviceWorker.getRegistrations(); for (let reg of regs) await reg.unregister(); } if ('caches' in window) { const keys = await caches.keys(); for (let key of keys) await caches.delete(key); } window.location.reload(); }); } }
+  if (page === "users") bindUsers(content, { render, refresh:users, add:addUser, remove:removeUser, fetchLast: () => state.get().lastScannedUid, export:() => download("attendance-users.json", JSON.stringify(app.users, null, 2)) });
+  if (page === "logs") bindLogs(content, { render, refresh:logs, clear, exportJson:() => download("attendance-logs.json", JSON.stringify(app.logs, null, 2)), exportCsv:() => download("attendance-logs.csv", csv(app.logs), "text/csv;charset=utf-8") });
+  if (page === "console") bindConsole(content, raw);
+  if (page === "settings") {
+    content.querySelector("#theme-setting")?.addEventListener("click", theme);
+    content.querySelector("#autoscroll")?.addEventListener("change", event => state.set({ autoScroll:event.target.checked }));
+
+    content.querySelector("#demo-toggle")?.addEventListener("change", event => {
+      const enabled = event.target.checked;
+      localStorage.setItem("attendance-demo-mode", enabled ? "true" : "false");
+      state.set({ demoMode: enabled });
+      render();
+      toast(enabled ? "Demo Time Mode enabled." : "Demo Time Mode disabled. Actual time restored.");
+    });
+
+    const updateDemoOffset = () => {
+      const dir = content.querySelector("#demo-direction")?.value || "+";
+      const hrs = content.querySelector("#demo-hours")?.value || 0;
+      const mins = content.querySelector("#demo-minutes")?.value || 0;
+      const ms = calculateDemoOffsetMs(dir, hrs, mins);
+      localStorage.setItem("attendance-demo-offset-ms", String(ms));
+      state.set({ demoOffsetMs: ms });
+      const summaryEl = content.querySelector("#demo-summary");
+      if (summaryEl) summaryEl.textContent = formatDemoOffsetSummary(ms);
+      syncChrome();
+    };
+
+    content.querySelector("#demo-direction")?.addEventListener("change", updateDemoOffset);
+    content.querySelector("#demo-hours")?.addEventListener("input", updateDemoOffset);
+    content.querySelector("#demo-minutes")?.addEventListener("input", updateDemoOffset);
+
+    content.querySelector("#demo-reset")?.addEventListener("click", () => {
+      localStorage.setItem("attendance-demo-mode", "false");
+      localStorage.setItem("attendance-demo-offset-ms", "0");
+      state.set({ demoMode: false, demoOffsetMs: 0 });
+      render();
+      toast("Demo Time Mode reset. Actual system time restored.");
+    });
+
+    content.querySelector("#force-update")?.addEventListener("click", async () => {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (let reg of regs) await reg.unregister();
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (let key of keys) await caches.delete(key);
+      }
+      window.location.reload();
+    });
+  }
+}
 function theme() { const next = state.get().theme === "dark" ? "light" : "dark"; localStorage.setItem("attendance-theme", next); state.set({ theme:next }); if (page === "settings") render(); }
 function status(message) { const data = message.data && typeof message.data === "object" ? { ...message, ...message.data } : message; state.set({ status:data, board:data.board ?? data.board_type ?? state.get().board, firmware:data.firmware ?? data.version ?? state.get().firmware }); }
 function records(items, plural) {
@@ -191,7 +315,13 @@ protocol.addEventListener("message", event => {
 });
 state.subscribe(app => { syncChrome(); syncDashboard(app); });
 document.querySelectorAll(".nav-item").forEach(button => button.addEventListener("click", () => { page = button.dataset.page; setPage(page); render(); document.querySelector("#sidebar").classList.remove("open"); document.querySelector("#backdrop").classList.remove("visible"); }));
-document.querySelector("#connect-button").addEventListener("click", () => connect()); document.querySelector("#theme-button").addEventListener("click", theme);
+document.querySelector("#connect-button").addEventListener("click", () => connect());
+document.querySelector("#theme-button").addEventListener("click", theme);
+document.querySelector("#demo-badge")?.addEventListener("click", () => {
+  page = "settings";
+  setPage("settings");
+  render();
+});
 document.querySelector("#menu-button").addEventListener("click", () => { document.querySelector("#sidebar").classList.add("open"); document.querySelector("#backdrop").classList.add("visible"); }); document.querySelector("#backdrop").addEventListener("click", () => { document.querySelector("#sidebar").classList.remove("open"); document.querySelector("#backdrop").classList.remove("visible"); });
 document.querySelector("#reconnect-dialog").addEventListener("close", () => { if (document.querySelector("#reconnect-dialog").returnValue === "reconnect") reconnect(); });
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(error => console.warn("Service worker registration failed", error)));

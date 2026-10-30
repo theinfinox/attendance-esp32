@@ -16,6 +16,20 @@ export function addConsoleLine(content, direction = "in") {
   if (state.get().autoScroll) terminal.scrollTop = terminal.scrollHeight;
 }
 /** Set nav UI elements and button state from central state. */
-export function syncChrome() { const app = state.get(); document.documentElement.dataset.theme = app.theme; const live = app.connected; document.querySelectorAll(".status-dot").forEach(dot => dot.classList.toggle("connected", live)); document.querySelector("#sidebar-status").textContent = app.connecting ? "Connecting…" : live ? "Connected" : "Disconnected"; const button = document.querySelector("#connect-button"); button.disabled = app.connecting; button.querySelector("span:last-child").textContent = app.connecting ? "Connecting…" : live ? "Disconnect" : "Connect device"; document.querySelector("#theme-button").textContent = app.theme === "dark" ? "☀" : "☾"; }
+export function syncChrome() {
+  const app = state.get();
+  document.documentElement.dataset.theme = app.theme;
+  const live = app.connected;
+  document.querySelectorAll(".status-dot").forEach(dot => dot.classList.toggle("connected", live));
+  const statusEl = document.querySelector("#sidebar-status");
+  if (statusEl) {
+    statusEl.textContent = app.connecting ? "Connecting…" : live ? "Connected" : "Disconnected";
+    statusEl.className = live ? "status-connected" : "status-disconnected";
+  }
+  const button = document.querySelector("#connect-button");
+  button.disabled = app.connecting;
+  button.querySelector("span:last-child").textContent = app.connecting ? "Connecting…" : live ? "Disconnect" : "Connect device";
+  document.querySelector("#theme-button").textContent = app.theme === "dark" ? "☀" : "☾";
+}
 /** Change the active navigation page. */
 export function setPage(page) { const [title, subtitle] = pages[page] || pages.dashboard; document.querySelector("#page-title").textContent = title; document.querySelector("#page-subtitle").textContent = subtitle; document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === page)); document.querySelector("#sidebar").classList.remove("open"); document.querySelector("#backdrop").classList.remove("visible"); }

@@ -46,6 +46,7 @@ class MockElement {
         const found = ch.querySelector(sel);
         if (found) return found;
       }
+      return new MockElement('div', id);
     }
     return null;
   }

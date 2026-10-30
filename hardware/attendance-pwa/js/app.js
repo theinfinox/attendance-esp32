@@ -88,7 +88,7 @@ function settings(app) {
   </div>`;
 }
 function about() { return `<section class="card wide-card"><h2>Serial Attendance Manager</h2><p class="muted">A local-first Progressive Web App for ESP32 and STM32 attendance hardware. It communicates directly through the browser Web Serial API; no Wi-Fi, server, HTTP API, or WebSocket connection is used.</p><div class="device-details"><div><span>Transport</span><strong>USB Serial, 115200 baud</strong></div><div><span>Protocol</span><strong>Newline-delimited JSON CLI</strong></div><div><span>Installation</span><strong>Offline-capable PWA</strong></div><div><span>Browser support</span><strong>Chromium-based browsers</strong></div></div></section>`; }
-function render() { const app = state.get(); syncChrome(); const views = { dashboard:renderDashboard, users:renderUsers, logs:renderLogs, console:renderConsole, settings, about }; content.innerHTML = views[page](app); bind(); }
+function render() { const app = state.get(); syncChrome(page); const views = { dashboard:renderDashboard, users:renderUsers, logs:renderLogs, console:renderConsole, settings, about }; content.innerHTML = views[page](app); bind(); }
 function syncDashboard(app) {
   if (page !== "dashboard") return;
   const s = app.status || {};
@@ -177,7 +177,7 @@ function bind() {
       state.set({ demoOffsetMs: ms });
       const summaryEl = content.querySelector("#demo-summary");
       if (summaryEl) summaryEl.textContent = formatDemoOffsetSummary(ms);
-      syncChrome();
+      syncChrome(page);
     };
 
     content.querySelector("#demo-direction")?.addEventListener("change", updateDemoOffset);
@@ -321,7 +321,7 @@ protocol.addEventListener("message", event => {
   }
   addConsoleLine(JSON.stringify(message), "in");
 });
-state.subscribe(app => { syncChrome(); syncDashboard(app); });
+state.subscribe(app => { syncChrome(page); syncDashboard(app); });
 document.querySelectorAll(".nav-item").forEach(button => button.addEventListener("click", () => { page = button.dataset.page; setPage(page); render(); document.querySelector("#sidebar").classList.remove("open"); document.querySelector("#backdrop").classList.remove("visible"); }));
 document.querySelector("#connect-button").addEventListener("click", () => connect());
 document.querySelector("#theme-button").addEventListener("click", theme);

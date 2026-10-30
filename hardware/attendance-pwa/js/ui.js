@@ -17,7 +17,7 @@ export function addConsoleLine(content, direction = "in") {
   if (state.get().autoScroll) terminal.scrollTop = terminal.scrollHeight;
 }
 /** Set nav UI elements and button state from central state. */
-export function syncChrome() {
+export function syncChrome(activePage) {
   const app = state.get();
   document.documentElement.dataset.theme = app.theme;
   const live = app.connected;
@@ -33,7 +33,7 @@ export function syncChrome() {
   document.querySelector("#theme-button").textContent = app.theme === "dark" ? "☀" : "☾";
   const demoBadge = document.querySelector("#demo-badge");
   if (demoBadge) {
-    if (app.demoMode) {
+    if (app.demoMode && activePage === "settings") {
       demoBadge.style.display = "inline-flex";
       demoBadge.textContent = formatDemoBadge(app.demoOffsetMs || 0);
     } else {

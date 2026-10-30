@@ -121,7 +121,7 @@ global.localStorage = {
 
 console.log('--- Loading app.js in Mock DOM Environment ---');
 
-import('../js/app.js').then(() => {
+import('../js/app.js').then(async () => {
   console.log('PASS: app.js loaded and executed top-level code successfully.');
 
   // Verify button event listeners
@@ -170,12 +170,61 @@ import('../js/app.js').then(() => {
   console.log('\n--- Testing Navigation to Users then Settings ---');
   const usersNav = navItems.find(item => item.dataset.page === 'users');
   usersNav.dispatchEvent({ type: 'click' });
-  console.log('After clicking Users, content has "Search users":', appContent.innerHTML.includes('Search users'));
+  if (!appContent.innerHTML.includes('Search users')) {
+    throw new Error('Navigating to Users did not render user management table!');
+  }
+  console.log('PASS: Users page renders users table.');
 
   const settingsNav = navItems.find(item => item.dataset.page === 'settings');
   settingsNav.dispatchEvent({ type: 'click' });
-  console.log('After clicking Settings, content has "settings-grid":', appContent.innerHTML.includes('settings-grid'));
-  console.log('After clicking Settings, content has "Search users":', appContent.innerHTML.includes('Search users'));
+  if (!appContent.innerHTML.includes('settings-grid')) {
+    throw new Error('Navigating to Settings did not render settings grid!');
+  }
+  if (appContent.innerHTML.includes('Search users')) {
+    throw new Error('Navigating to Settings still displays users management table!');
+  }
+  console.log('PASS: Settings page renders settings grid and does not display users table.');
+
+  // Test Navigating back to Users
+  usersNav.dispatchEvent({ type: 'click' });
+  if (!appContent.innerHTML.includes('Search users') || appContent.innerHTML.includes('settings-grid')) {
+    throw new Error('Navigating back to Users failed!');
+  }
+  console.log('PASS: Re-navigating to Users correctly renders users table.');
+
+  // Test Demo Badge page-specific visibility
+  console.log('\n--- Testing Demo Badge Visibility per Page ---');
+  const { state } = await import('../js/state.js');
+  state.set({ demoMode: true, demoOffsetMs: 54000000 }); // +15h
+
+  const dashboardNav = navItems.find(item => item.dataset.page === 'dashboard');
+  const logsNav = navItems.find(item => item.dataset.page === 'logs');
+  const consoleNav = navItems.find(item => item.dataset.page === 'console');
+
+  dashboardNav.dispatchEvent({ type: 'click' });
+  if (demoBadge.style.display !== 'none') throw new Error('Demo badge should be hidden on dashboard!');
+  console.log('PASS: Demo badge hidden on Dashboard.');
+
+  usersNav.dispatchEvent({ type: 'click' });
+  if (demoBadge.style.display !== 'none') throw new Error('Demo badge should be hidden on Users!');
+  console.log('PASS: Demo badge hidden on Users.');
+
+  logsNav.dispatchEvent({ type: 'click' });
+  if (demoBadge.style.display !== 'none') throw new Error('Demo badge should be hidden on Logs!');
+  console.log('PASS: Demo badge hidden on Logs.');
+
+  consoleNav.dispatchEvent({ type: 'click' });
+  if (demoBadge.style.display !== 'none') throw new Error('Demo badge should be hidden on Console!');
+  console.log('PASS: Demo badge hidden on Console.');
+
+  settingsNav.dispatchEvent({ type: 'click' });
+  if (demoBadge.style.display !== 'inline-flex') throw new Error('Demo badge should be visible on Settings when demoMode is active!');
+  console.log('PASS: Demo badge visible on Settings when demoMode is active.');
+
+  state.set({ demoMode: false });
+  settingsNav.dispatchEvent({ type: 'click' });
+  if (demoBadge.style.display !== 'none') throw new Error('Demo badge should be hidden when demoMode is false!');
+  console.log('PASS: Demo badge hidden on Settings when demoMode is inactive.');
 
   console.log('\n>>> APP INITIALIZATION AND BUTTON HANDLERS VERIFIED 100% <<<');
   process.exit(0);

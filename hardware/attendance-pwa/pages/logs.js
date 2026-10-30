@@ -1,18 +1,23 @@
-import { escapeHtml, formatDate, getPillClass } from "../js/utils.js";
+import { escapeHtml, formatDate, getPillClass, sortAttendanceLogs } from "../js/utils.js";
 
 let view = { query:"", filter:"all", page:1, size:12 };
 const record = log => {
   const status = String(log.status ?? "").toUpperCase();
   return {
+    ...log,
     time:log.timestamp ?? log.time ?? log.date ?? "",
+    timestamp:log.timestamp ?? log.time ?? log.date ?? "",
     name:log.name ?? log.user_name ?? log.user ?? "Unknown",
     card:log.card ?? log.rfid ?? log.rfid_uid ?? log.card_id ?? log.uid ?? "—",
-    event:log.event ?? log.action ?? ({ IN:"Check-in", OUT:"Check-out" }[status] ?? log.status ?? log.type ?? "Attendance")
+    uid:log.uid ?? log.card ?? "—",
+    event:log.event ?? log.action ?? ({ IN:"Check-in", OUT:"Check-out" }[status] ?? log.status ?? log.type ?? "Attendance"),
+    status:log.status ?? (log.event === "Check-out" ? "OUT" : "IN")
   };
 };
 /** Render the log collection with search and event filtering. */
 export function renderLogs(app) {
-  const items = app.logs.map(record).filter(log => (view.filter === "all" || log.event.toLowerCase() === view.filter) && Object.values(log).join(" ").toLowerCase().includes(view.query.toLowerCase()));
+  const sorted = sortAttendanceLogs(app.logs || []);
+  const items = sorted.map(record).filter(log => (view.filter === "all" || log.event.toLowerCase() === view.filter) && Object.values(log).join(" ").toLowerCase().includes(view.query.toLowerCase()));
   const pages = Math.max(1, Math.ceil(items.length / view.size)); view.page = Math.min(view.page, pages); const shown = items.slice((view.page - 1) * view.size, view.page * view.size);
   const rows = shown.length ? shown.map(log => {
     const pillClass = getPillClass(log.event);

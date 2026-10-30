@@ -1,4 +1,4 @@
-import { escapeHtml, formatDate, getPillClass } from "../js/utils.js";
+import { escapeHtml, formatDate, getPillClass, sortAttendanceLogs } from "../js/utils.js";
 
 const metric = (label, valueHtml, detail = "", key) => `<article class="card metric-card"><span class="metric-label">${label}</span><strong class="metric-value" data-metric="${key}">${valueHtml}</strong><span class="metric-detail">${escapeHtml(detail)}</span></article>`;
 
@@ -8,7 +8,7 @@ export function renderDashboard(app) {
   const storage = s.storage ?? s.storage_status ?? "Unknown";
   const rfid = s.rfid ?? s.rfid_status ?? "Unknown";
 
-  const recentLogs = (app.logs || []).slice(0, 5);
+  const recentLogs = sortAttendanceLogs(app.logs || []).slice(0, 5);
   const recentRows = recentLogs.length ? recentLogs.map(log => {
     const statusVal = String(log.status ?? "").toUpperCase();
     const eventName = log.event ?? ({ IN:"Check-in", OUT:"Check-out" }[statusVal] ?? log.status ?? "Attendance");

@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { SerialTransport } from "./serial.js";
 import { AttendanceProtocol } from "./protocol.js";
 import { addConsoleLine, setPage, syncChrome, toast } from "./ui.js";
-import { csv, download, formatDate, getPillClass, calculateDemoOffsetMs, formatDemoOffsetSummary } from "./utils.js";
+import { csv, download, formatDate, getPillClass, calculateDemoOffsetMs, formatDemoOffsetSummary, deduplicateLogs, sortAttendanceLogs, isDuplicateLog } from "./utils.js";
 import { renderDashboard } from "../pages/dashboard.js";
 import { bindUsers, renderUsers } from "../pages/users.js";
 import { bindLogs, renderLogs } from "../pages/logs.js";
@@ -227,7 +227,16 @@ async function command(text, options) { if (!state.get().connected) return toast
 async function users() { const reply = await command("DUMP_USERS", { timeout:15000, allowMultilineJson:true }); state.set({ users:records(reply, "users") }); if (page === "users") render(); toast("Users refreshed."); }
 async function addUser(user) { try { const reply = await command(`ADD_USER ${JSON.stringify(user)}`, { timeout:12000 }); const failure = reply.find(item => item?.type === "error"); if (failure) throw new Error(failure.message || "The device rejected this user."); const confirmed = reply.find(item => item?.type === "user")?.data ?? user; const uid = confirmed.uid ?? confirmed.id ?? user.uid; state.set({ users:[...state.get().users.filter(item => (item.uid ?? item.id ?? item.card_id) !== uid), confirmed] }); render(); toast(`${confirmed.name ?? user.name} was added to the device.`); } catch (error) { toast(error.message, "error"); } }
 async function removeUser(uid) { try { const reply = await command(`DELETE_USER ${uid}`, { timeout: 12000 }); const failure = reply.find(item => item?.type === "error"); if (failure) throw new Error(failure.message || "The device rejected the deletion."); state.set({ users: state.get().users.filter(item => (item.uid ?? item.id ?? item.card_id) !== uid) }); render(); toast("User was deleted from the device."); } catch (error) { toast(error.message, "error"); } }
-async function logs() { const reply = await command("DUMP_LOGS", { streaming:true, timeout:20000 }); state.set({ logs:records(reply, "logs") }); if (page === "logs") render(); toast("Attendance logs refreshed."); }
+async function logs() {
+  const reply = await command("DUMP_LOGS", { streaming:true, timeout:20000 });
+  const rawLogs = records(reply, "logs");
+  const current = state.get().logs || [];
+  const merged = deduplicateLogs([...rawLogs, ...current]);
+  const sorted = sortAttendanceLogs(merged);
+  state.set({ logs: sorted });
+  if (page === "logs") render();
+  toast("Attendance logs refreshed.");
+}
 async function clear() { if (!state.get().connected) return toast("Connect a serial device first.", "error"); if (!confirm("Clear all attendance logs from the device? This cannot be undone.")) return; await command("CLEAR_LOGS", { timeout:12000 }); state.set({ logs:[] }); if (page === "logs") render(); toast("Logs cleared."); }
 async function raw(text) { if (!state.get().connected) return; addConsoleLine(text, "out"); try { await serial.write(text); } catch (error) { addConsoleLine(error.message, "error"); toast(error.message, "error"); } }
 async function connect(port) { 
@@ -301,13 +310,11 @@ protocol.addEventListener("message", event => {
       event: eventName,
       status: raw.status ?? (eventName === "Check-out" ? "OUT" : "IN")
     };
-    const currentLogs = state.get().logs;
-    const isDup = currentLogs.some(item =>
-      (entry.event_id && item.event_id === entry.event_id) ||
-      (entry.timestamp && item.timestamp === entry.timestamp && (item.card === entry.card || item.uid === entry.uid))
-    );
+    const currentLogs = state.get().logs || [];
+    const isDup = currentLogs.some(item => isDuplicateLog(item, entry));
     if (!isDup) {
-      state.set({ logs:[entry, ...currentLogs] });
+      const nextLogs = sortAttendanceLogs([entry, ...currentLogs]);
+      state.set({ logs: nextLogs });
       appendLiveLog(entry);
     }
   }

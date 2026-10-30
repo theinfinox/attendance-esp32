@@ -332,7 +332,7 @@ The standalone implementation uses a 64 KB region at the top of the STM32G491RE 
 | Zone C — Event journal | 236–255 | `0x08076000–0x0807FFFF` | 40 KB | Append-only attendance records |
 | **Total reserved** | **224–255** | `0x08070000–0x0807FFFF` | **64 KB** | Persistent data |
 
-The storage header defines a Flash page size of 2048 bytes. The low-level Flash driver limits page erases and writes to this reserved address range.
+The storage header defines a Flash page size of 2048 bytes. The STM32G491 is a Category 4 device in ST reference manual RM0440; Category 4 main Flash is a single bank with 2 KB pages. On the 512 KB STM32G491RE, the top 64 KB therefore corresponds to pages 224–255, matching the source's `FLASH_BANK_1`, page-number calculation, and erase guard. See [ST RM0440](https://www.st.com/resource/en/reference_manual/dm00355726-stm32g4-series-reference-manual-stmicroelectronics.pdf) and the [STM32G491RE datasheet](https://www.st.com/resource/en/datasheet/stm32g491re.pdf). The low-level Flash driver limits page erases and writes to this reserved address range.
 
 ### Zone A — Enrolled users
 
@@ -588,7 +588,7 @@ The following points are visible from the current source and should be handled b
 9. **Simulated fallback visibility:** simulated RFID mode is intentionally available for diagnostics, but should be unmistakable in the UI/status and disabled or protected in an operational deployment.
 10. **Disabled indicators:** LED and buzzer drivers are present but compile-time disabled. Do not claim audible or LED feedback is currently active on hardware.
 11. **Debug/production configuration:** debug mode is true. Review serial diagnostics, simulation entry points, input validation, and provisioning before a real deployment.
-12. **Name and UID field bounds:** the CLI accepts values longer than the fixed-width Flash fields. Enforce limits that match the actual record layout to avoid silent truncation.
+12. **Name and UID field bounds:** the CLI accepts values longer than the fixed-width Flash fields. Enforce limits that match the actual record layout to avoid silent truncation. The active-state transition record stores a UID across a 7-character field plus a 3-character extension, so state-based IN/OUT matching currently retains only 10 hexadecimal characters; 7-byte (14-hex-character) UIDs are not safely represented for state tracking. The journal's UID field is wider, so this mismatch can make the persisted history and current-state lookup disagree for longer UIDs.
 
 These are source-review observations, not proof that data has already been lost or that a specific runtime failure has occurred.
 

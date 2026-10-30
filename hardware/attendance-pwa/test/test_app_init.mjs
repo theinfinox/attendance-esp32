@@ -11,7 +11,16 @@ class MockElement {
       classes: new Set(className.split(' ').filter(Boolean)),
       add(c) { this.classes.add(c); },
       remove(c) { this.classes.delete(c); },
-      contains(c) { return this.classes.has(c); }
+      contains(c) { return this.classes.has(c); },
+      toggle(c, force) {
+        if (force !== undefined) {
+          if (force) this.classes.add(c);
+          else this.classes.delete(c);
+        } else {
+          if (this.classes.has(c)) this.classes.delete(c);
+          else this.classes.add(c);
+        }
+      }
     };
     this.children = [];
     this.listeners = {};
@@ -156,6 +165,17 @@ import('../js/app.js').then(() => {
     throw new Error('Initial render() did not populate #app-content!');
   }
   console.log('PASS: Initial render() populated #app-content successfully.');
+  // Test Navigating to Users then Settings
+  console.log('\n--- Testing Navigation to Users then Settings ---');
+  const usersNav = navItems.find(item => item.dataset.page === 'users');
+  usersNav.dispatchEvent({ type: 'click' });
+  console.log('After clicking Users, content has "Search users":', appContent.innerHTML.includes('Search users'));
+
+  const settingsNav = navItems.find(item => item.dataset.page === 'settings');
+  settingsNav.dispatchEvent({ type: 'click' });
+  console.log('After clicking Settings, content has "settings-grid":', appContent.innerHTML.includes('settings-grid'));
+  console.log('After clicking Settings, content has "Search users":', appContent.innerHTML.includes('Search users'));
+
   console.log('\n>>> APP INITIALIZATION AND BUTTON HANDLERS VERIFIED 100% <<<');
   process.exit(0);
 }).catch(err => {

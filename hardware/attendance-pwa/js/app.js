@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { SerialTransport } from "./serial.js";
 import { AttendanceProtocol } from "./protocol.js";
 import { addConsoleLine, setPage, syncChrome, toast } from "./ui.js";
-import { csv, download, formatDate, getPillClass, calculateDemoOffsetMs, formatDemoOffsetSummary, deduplicateLogs, sortAttendanceLogs, isDuplicateLog } from "./utils.js";
+import { csv, download, formatDate, getPillClass, calculateDemoOffsetMs, formatDemoOffsetSummary, escapeHtml, deduplicateLogs, sortAttendanceLogs, isDuplicateLog } from "./utils.js";
 import { renderDashboard } from "../pages/dashboard.js";
 import { bindUsers, renderUsers } from "../pages/users.js";
 import { bindLogs, renderLogs } from "../pages/logs.js";
